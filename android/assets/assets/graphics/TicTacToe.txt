@@ -1,0 +1,137 @@
+TicTacToe.png
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+BaconWins
+  rotate: false
+  xy: 2, 385
+  size: 551, 187
+  orig: 551, 187
+  offset: 0, 0
+  index: -1
+Blueberrymuffin
+  rotate: false
+  xy: 555, 385
+  size: 265, 222
+  orig: 265, 222
+  offset: 0, 0
+  index: -1
+Cereal
+  rotate: false
+  xy: 339, 49
+  size: 205, 148
+  orig: 205, 148
+  offset: 0, 0
+  index: -1
+CookedbaconX
+  rotate: false
+  xy: 631, 199
+  size: 121, 184
+  orig: 121, 184
+  offset: 0, 0
+  index: -1
+Egg
+  rotate: false
+  xy: 503, 199
+  size: 126, 162
+  orig: 152, 168
+  offset: 17, 0
+  index: -1
+EggWins
+  rotate: false
+  xy: 2, 199
+  size: 499, 158
+  orig: 499, 158
+  offset: 0, 0
+  index: -1
+EmptySelectionDown
+  rotate: false
+  xy: 284, 49
+  size: 53, 54
+  orig: 59, 60
+  offset: 3, 3
+  index: -1
+EmptySelectionUp
+  rotate: false
+  xy: 174, 49
+  size: 53, 54
+  orig: 59, 60
+  offset: 3, 3
+  index: -1
+ExtraButtonDown
+  rotate: false
+  xy: 694, 2
+  size: 170, 45
+  orig: 170, 45
+  offset: 0, 0
+  index: -1
+ExtraButtonUp
+  rotate: false
+  xy: 2, 49
+  size: 170, 45
+  orig: 170, 45
+  offset: 0, 0
+  index: -1
+Lock
+  rotate: false
+  xy: 822, 385
+  size: 166, 233
+  orig: 166, 233
+  offset: 0, 0
+  index: -1
+LockedItem
+  rotate: false
+  xy: 229, 49
+  size: 53, 54
+  orig: 53, 54
+  offset: 0, 0
+  index: 1
+MainscreenBlank
+  rotate: false
+  xy: 320, 620
+  size: 316, 389
+  orig: 316, 389
+  offset: 0, 0
+  index: -1
+OnePlayerModeButtonDown
+  rotate: false
+  xy: 2, 2
+  size: 171, 44
+  orig: 171, 44
+  offset: 0, 0
+  index: -1
+OnePlayerModeButtonUp
+  rotate: false
+  xy: 175, 2
+  size: 171, 44
+  orig: 171, 44
+  offset: 0, 0
+  index: -1
+PlayerOneSelection
+  rotate: false
+  xy: 638, 620
+  size: 316, 389
+  orig: 316, 389
+  offset: 0, 0
+  index: 1
+PlayerTwoSelection
+  rotate: false
+  xy: 2, 620
+  size: 316, 389
+  orig: 316, 389
+  offset: 0, 0
+  index: 1
+TwoPlayerModeButtonDown
+  rotate: false
+  xy: 348, 2
+  size: 171, 44
+  orig: 171, 44
+  offset: 0, 0
+  index: -1
+TwoPlayerModeButtonUp
+  rotate: false
+  xy: 521, 2
+  size: 171, 44
+  orig: 171, 44
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,186 @@
+tictactoe_image0.png
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Bacon3
+  rotate: false
+  xy: 2, 1938
+  size: 80, 101
+  orig: 80, 101
+  offset: 0, 0
+  index: 1
+Bacon3
+  rotate: false
+  xy: 770, 1802
+  size: 79, 166
+  orig: 79, 166
+  offset: 0, 0
+  index: 2
+Bacon3
+  rotate: false
+  xy: 311, 1884
+  size: 116, 158
+  orig: 116, 158
+  offset: 0, 0
+  index: 3
+Bacon4
+  rotate: false
+  xy: 1748, 2
+  size: 267, 131
+  orig: 267, 131
+  offset: 0, 0
+  index: 1
+Bacon4
+  rotate: false
+  xy: 1748, 135
+  size: 258, 168
+  orig: 258, 168
+  offset: 0, 0
+  index: 2
+Bacon4
+  rotate: false
+  xy: 1748, 305
+  size: 258, 121
+  orig: 258, 121
+  offset: 0, 0
+  index: 3
+Bacon5
+  rotate: false
+  xy: 2, 2
+  size: 580, 527
+  orig: 580, 527
+  offset: 0, 0
+  index: 1
+Bacon5
+  rotate: false
+  xy: 584, 2
+  size: 580, 527
+  orig: 580, 527
+  offset: 0, 0
+  index: 2
+Bacon5
+  rotate: false
+  xy: 1166, 2
+  size: 580, 527
+  orig: 580, 527
+  offset: 0, 0
+  index: 3
+Bacon5
+  rotate: false
+  xy: 2, 599
+  size: 580, 527
+  orig: 580, 527
+  offset: 0, 0
+  index: 4
+Bacon5
+  rotate: false
+  xy: 2, 1128
+  size: 580, 527
+  orig: 580, 527
+  offset: 0, 0
+  index: 5
+Bacon5
+  rotate: false
+  xy: 770, 531
+  size: 580, 527
+  orig: 580, 527
+  offset: 0, 0
+  index: 6
+Bacon5
+  rotate: false
+  xy: 584, 1087
+  size: 580, 527
+  orig: 580, 527
+  offset: 0, 0
+  index: 7
+Egg
+  rotate: false
+  xy: 584, 875
+  size: 156, 210
+  orig: 156, 210
+  offset: 0, 0
+  index: 1
+Egg
+  rotate: false
+  xy: 1166, 1128
+  size: 579, 527
+  orig: 579, 527
+  offset: 0, 0
+  index: 10
+Egg
+  rotate: false
+  xy: 620, 1616
+  size: 186, 184
+  orig: 186, 186
+  offset: 0, 1
+  index: 2
+Egg
+  rotate: false
+  xy: 558, 1884
+  size: 210, 156
+  orig: 210, 156
+  offset: 0, 0
+  index: 3
+Egg
+  rotate: false
+  xy: 808, 1616
+  size: 210, 156
+  orig: 210, 156
+  offset: 0, 0
+  index: 4
+Egg
+  rotate: false
+  xy: 851, 1774
+  size: 210, 156
+  orig: 210, 156
+  offset: 0, 0
+  index: 5
+Egg
+  rotate: false
+  xy: 1748, 428
+  size: 252, 169
+  orig: 252, 169
+  offset: 0, 0
+  index: 6
+Egg
+  rotate: false
+  xy: 311, 1657
+  size: 307, 225
+  orig: 307, 225
+  offset: 0, 0
+  index: 7
+Egg
+  rotate: false
+  xy: 2, 1657
+  size: 307, 279
+  orig: 307, 279
+  offset: 0, 0
+  index: 8
+cookedbaconX
+  rotate: false
+  xy: 620, 689
+  size: 121, 184
+  orig: 121, 184
+  offset: 0, 0
+  index: -1
+eggcookO1
+  rotate: false
+  xy: 620, 531
+  size: 127, 156
+  orig: 333, 188
+  offset: 128, 0
+  index: -1
+eggcookO2
+  rotate: false
+  xy: 429, 1884
+  size: 127, 157
+  orig: 333, 189
+  offset: 129, 1
+  index: -1
+frying pan
+  rotate: false
+  xy: 1352, 599
+  size: 580, 527
+  orig: 580, 527
+  offset: 0, 0
+  index: -1
