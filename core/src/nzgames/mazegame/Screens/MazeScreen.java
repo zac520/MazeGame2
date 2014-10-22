@@ -143,7 +143,10 @@ public class MazeScreen implements Screen {
             directions.add(i);
         }
         Collections.shuffle(directions);
-        
+
+
+
+
 
 
         //make sure our next direction is within the confines of the outer maze edge
