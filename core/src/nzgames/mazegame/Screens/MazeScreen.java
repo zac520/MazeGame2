@@ -3,11 +3,15 @@ package nzgames.mazegame.Screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.Array;
 import nzgames.mazegame.Actors.Player;
 import nzgames.mazegame.Handlers.Box2DVars;
@@ -35,6 +39,9 @@ public class MazeScreen implements Screen {
     private Body[][] verticalWalls;
     private Body[][] horizontalWalls;
 
+    private Actor[][] verticalWallActor;
+    private Actor[][] horizontalWallActor;
+
     private int [][] visitedSquares;
 
     private float accelx;
@@ -45,13 +52,18 @@ public class MazeScreen implements Screen {
     Player player;
     private Stage stage;
 
-    public MazeScreen(MainGame myGame) {
+    private TextureRegion horizontalMazeWall;
+
+    public MazeScreen(MainGame myGame, int height, int width) {
         game = myGame;
+
+        //set up the block height and width
+        blocksHigh = height;
+        blocksWide = width;
 
         //set the camera up
         camera = new OrthographicCamera();
         camera.setToOrtho(false, game.SCREEN_WIDTH, game.SCREEN_HEIGHT);
-        camera.position.set(0, 0, 0);
 
         stage= new Stage();
         stage.getViewport().setCamera(camera);
@@ -80,11 +92,13 @@ public class MazeScreen implements Screen {
         }
 
 
-        //create the maze border
-        drawBorder();
+        horizontalMazeWall = new TextureRegion(game.atlas.findRegion("EmptySelectionUp"));
 
         //add up all the walls (we destroy them as we make the maze, leaving only the usable maze walls)
         addAllMazeWalls();
+
+        //create the maze border
+        drawBorder();
 
         //create a circle at the starting point
         createPlayer(0, 0);
@@ -124,6 +138,7 @@ public class MazeScreen implements Screen {
                     else {
                         //break down the wall
                         world.destroyBody(horizontalWalls[(int) currentPosition.x][(int) currentPosition.y + 1]);
+                        stage.getRoot().removeActor(horizontalWallActor[(int)currentPosition.x][(int)currentPosition.y +1]);
 
 
                         //travel to that spot now that we can get there
@@ -145,6 +160,7 @@ public class MazeScreen implements Screen {
                     else {
                         //break down the wall
                         world.destroyBody(verticalWalls[(int) currentPosition.x + 1][(int) currentPosition.y]);
+                        stage.getRoot().removeActor(verticalWallActor[(int) currentPosition.x + 1][(int) currentPosition.y]);
 
                         //travel to that spot now that we can get there
                         currentPosition.x += 1;
@@ -165,6 +181,7 @@ public class MazeScreen implements Screen {
                     else {
                         //break down the wall
                         world.destroyBody(horizontalWalls[(int) currentPosition.x][(int) currentPosition.y]);
+                        stage.getRoot().removeActor(horizontalWallActor[(int) currentPosition.x][(int) currentPosition.y]);
 
                         //travel to that spot now that we can get there
                         currentPosition.y -= 1;
@@ -186,6 +203,7 @@ public class MazeScreen implements Screen {
                     else {
                         //break down the wall
                         world.destroyBody(verticalWalls[(int) currentPosition.x][(int) currentPosition.y]);
+                        stage.getRoot().removeActor(verticalWallActor[(int) currentPosition.x][(int) currentPosition.y]);
 
                         //travel to that spot now that we can get there
                         currentPosition.x -= 1;
@@ -287,8 +305,10 @@ public class MazeScreen implements Screen {
 
         player.update(delta);
 
-        stage.act();
+        stage.act(delta);
         stage.draw();
+
+
 
         //draw box2d world
         if(debug) {
@@ -420,6 +440,10 @@ public class MazeScreen implements Screen {
         verticalWalls = new Body[blocksWide][blocksHigh];
         horizontalWalls = new Body[blocksWide][blocksHigh];
 
+        verticalWallActor = new Actor[blocksWide][blocksHigh];
+        horizontalWallActor = new Actor[blocksWide][blocksHigh];
+
+
         //create all of the verticalWalls
         for(int x = 0; x< blocksWide; x++){
             for(int y = 0; y< blocksHigh; y++){
@@ -446,6 +470,14 @@ public class MazeScreen implements Screen {
         fdef.shape = shape;
         body.createFixture(fdef).setUserData("border");//a tag to identify this later
 
+        //now add a matching actor for that
+        Image wall = new Image(horizontalMazeWall);
+        wall.setSize(game.SCREEN_WIDTH,1.25f);
+        wall.setCenterPosition(
+                body.getPosition().x * Box2DVars.PPM,
+                body.getPosition().y * Box2DVars.PPM);
+        stage.addActor(wall);
+
         // top border
         //define body
         bdef = new BodyDef();
@@ -459,6 +491,15 @@ public class MazeScreen implements Screen {
         fdef = new FixtureDef();
         fdef.shape = shape;
         body.createFixture(fdef).setUserData("border");//a tag to identify this later
+
+        //add the actor
+        wall = new Image(horizontalMazeWall);
+        wall.setSize(game.SCREEN_WIDTH,1.25f);
+        wall.setCenterPosition(
+                body.getPosition().x * Box2DVars.PPM,
+                body.getPosition().y * Box2DVars.PPM);
+        stage.addActor(wall);
+
 
         // left border
         //define body
@@ -474,6 +515,14 @@ public class MazeScreen implements Screen {
         fdef.shape = shape;
         body.createFixture(fdef).setUserData("border");//a tag to identify this later
 
+        //add the actor
+        wall = new Image(horizontalMazeWall);
+        wall.setSize(1.25f,game.SCREEN_HEIGHT);
+        wall.setCenterPosition(
+                body.getPosition().x * Box2DVars.PPM,
+                body.getPosition().y * Box2DVars.PPM);
+        stage.addActor(wall);
+
         // right border
         //define body
         bdef = new BodyDef();
@@ -487,6 +536,15 @@ public class MazeScreen implements Screen {
         fdef = new FixtureDef();
         fdef.shape = shape;
         body.createFixture(fdef).setUserData("border");//a tag to identify this later
+
+        //add the actor
+        wall = new Image(horizontalMazeWall);
+        wall.setSize(1.25f,game.SCREEN_HEIGHT);
+        wall.setCenterPosition(
+                body.getPosition().x * Box2DVars.PPM,
+                body.getPosition().y * Box2DVars.PPM);
+        stage.addActor(wall);
+
     }
 
     private void createPlayer(int xPosition, int yPosition){
@@ -500,14 +558,14 @@ public class MazeScreen implements Screen {
 
         //define Fixture
         CircleShape shape = new CircleShape();
-        shape.setRadius((lineWidth/4)/Box2DVars.PPM);
+        shape.setRadius(lineWidth<lineHeight ?(lineWidth/4)/Box2DVars.PPM:(lineHeight/4)/Box2DVars.PPM);
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
 
         body.createFixture(fdef).setUserData("player");//a tag to identify this later
 
-        player = new Player(game,body,(lineWidth/2)/Box2DVars.PPM,(lineHeight/2)/Box2DVars.PPM);
-        stage.addActor(player);
+        player = new Player(game,body,shape.getRadius()*3,shape.getRadius()*3);
+        stage.addActor(player.getGroup());
     }
 
 
@@ -552,7 +610,26 @@ public class MazeScreen implements Screen {
             verticalWalls[xPosition / lineWidth][yPosition / lineHeight] = body;
         }
 
-
+        //now add the line to the stage
+        Image wall = new Image(horizontalMazeWall);
+        if(horizontal){
+            wall.setSize(lineWidth,1.25f);
+        }
+        else {
+            wall.setSize(1.25f,lineHeight);
+        }
+        wall.setCenterPosition(
+                body.getPosition().x * Box2DVars.PPM,
+                body.getPosition().y * Box2DVars.PPM);
+        stage.addActor(wall);
+        //add the actor we just put in my using the size
+        //wallsArray.add(stage.getActors().get(stage.getActors().size-1));
+        if(horizontal) {
+            horizontalWallActor[xPosition / lineWidth][yPosition / lineHeight] = stage.getActors().get(stage.getActors().size-1);
+        }
+        else{
+            verticalWallActor[xPosition / lineWidth][yPosition / lineHeight] = stage.getActors().get(stage.getActors().size-1);
+        }
     }
 
 

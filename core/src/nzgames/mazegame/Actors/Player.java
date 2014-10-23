@@ -64,9 +64,9 @@ public class Player extends GenericActor {
         //add this class to a graphics group so that we can append to it later
         graphicsGroup = new Group();
         graphicsGroup.addActor(this);
-        graphicsGroup.setPosition(
-                body.getPosition().x * Box2DVars.PPM - (worldWidth / 2),
-                body.getPosition().y * Box2DVars.PPM - (worldHeight / 2));
+        graphicsGroup.setCenterPosition(
+                body.getPosition().x * Box2DVars.PPM ,
+                body.getPosition().y * Box2DVars.PPM );
 
     }
     public void update(float delta) {
