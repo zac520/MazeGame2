@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import nzgames.mazegame.Screens.MazeScreen;
 import nzgames.mazegame.Screens.MenuScreen;
+import nzgames.mazegame.Screens.VictoryScreen;
 
 import java.util.Random;
 
@@ -23,10 +24,15 @@ public class MainGame extends Game {
 
     @Override
     public void create () {
-        rand = new Random();//seed this for any variable thing to use later
-        atlas = new TextureAtlas(Gdx.files.internal("assets/graphics/TicTacToe.txt"));
-        setScreen(new MenuScreen(this));
 
+
+        SCREEN_WIDTH = Gdx.graphics.getWidth();
+        SCREEN_HEIGHT = Gdx.graphics.getHeight();
+
+
+        rand = new Random();//seed this for any variable thing to use later
+        atlas = new TextureAtlas(Gdx.files.internal("assets/graphics/Maze.txt"));
+        setScreen(new MenuScreen(this));
     }
 
 

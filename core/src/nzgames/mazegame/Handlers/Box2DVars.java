@@ -5,7 +5,7 @@ package nzgames.mazegame.Handlers;
  */
 public class Box2DVars {
     //pixel per meter
-    public static final float PPM = 100;
+    public static final float PPM = 10;
 
     //category bits
     //use only powers of 2

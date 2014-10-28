@@ -2,39 +2,51 @@ package nzgames.mazegame.Screens;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.input.GestureDetector;
+import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.Array;
+import nzgames.mazegame.Actors.Goal;
 import nzgames.mazegame.Actors.Player;
 import nzgames.mazegame.Handlers.Box2DVars;
+import nzgames.mazegame.Handlers.MyContactListener;
 import nzgames.mazegame.MainGame;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Created by zac520 on 10/22/14.
  */
 public class MazeScreen implements Screen {
+
+    //TODO add timer as a HUD
+    // add saving best scores for each category
+    // add a path behind you for each block traveled
     OrthographicCamera camera;
     MainGame game;
     private World world;
     OrthographicCamera box2DCam;
     Box2DDebugRenderer box2DRenderer;
-    private boolean debug = true;
+    private boolean debug = false;
     private int lineWidth = 10;
     private int lineHeight = 10;
 
     private int blocksWide = 48;
-    private int blocksHigh = 36;
+    private int blocksHigh = 48;
 
     private Body[][] verticalWalls;
     private Body[][] horizontalWalls;
@@ -54,7 +66,35 @@ public class MazeScreen implements Screen {
 
     private TextureRegion horizontalMazeWall;
 
-    public MazeScreen(MainGame myGame, int height, int width) {
+
+    private float originalZoomLevelX = 1;
+    private float originalZoomLevelY = 1;
+
+    private float currentZoomLevelX = 1;
+    private float currentZoomLevelY = 1;
+
+    public boolean flinging = false;
+    public float velX;
+    public float velY;
+
+    public float x_left_limit;
+    public float x_right_limit;
+    public float y_bottom_limit;
+    public float y_top_limit;
+
+    public boolean initialZoomTouchdown = true;
+    private float currentCameraZoom = 1;
+
+    private boolean movingBlockBeyondBorders = false;
+    private int lastMovementDirection =1;
+
+    private int longestDistance = 0;
+    private int currentDistance = 0;
+    private Vector2 longestDistanceLocation;
+
+    private MyContactListener cl;
+    private Goal goal;
+    public MazeScreen(MainGame myGame, int width, int height) {
         game = myGame;
 
         //set up the block height and width
@@ -65,6 +105,10 @@ public class MazeScreen implements Screen {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, game.SCREEN_WIDTH, game.SCREEN_HEIGHT);
 
+        //set the limits of the camera
+        setStageLimits();
+
+        //start the stage with the camera
         stage= new Stage();
         stage.getViewport().setCamera(camera);
 
@@ -76,11 +120,13 @@ public class MazeScreen implements Screen {
         box2DCam.setToOrtho(false, game.SCREEN_WIDTH / Box2DVars.PPM, game.SCREEN_HEIGHT / Box2DVars.PPM);
 
         //add the world for the box2d bodies
-        world = new World(new Vector2(0, 0), true);
+        world = new World(new Vector2(0, 0), false);
+        cl = new MyContactListener();
+        world.setContactListener(cl);
 
-        //divide the world into equal squares (48 wide and 36 tall for now)
+        //divide the world into equal squares
         lineWidth = game.SCREEN_WIDTH / blocksWide;
-        lineHeight = game.SCREEN_HEIGHT / blocksHigh;
+        lineHeight =  game.SCREEN_HEIGHT / blocksHigh;
 
         //initialize the visited array
         visitedSquares = new int[blocksWide][blocksHigh];
@@ -92,7 +138,7 @@ public class MazeScreen implements Screen {
         }
 
 
-        horizontalMazeWall = new TextureRegion(game.atlas.findRegion("EmptySelectionUp"));
+        horizontalMazeWall = new TextureRegion(game.atlas.findRegion("Wall"));
 
         //add up all the walls (we destroy them as we make the maze, leaving only the usable maze walls)
         addAllMazeWalls();
@@ -102,6 +148,14 @@ public class MazeScreen implements Screen {
 
         //create a circle at the starting point
         createPlayer(0, 0);
+
+
+        //need a multiplexor so that the user can touch the level, or the user interface
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(new GestureDetector(new MyGestureListener()));
+        multiplexer.addProcessor(stage);
+        Gdx.input.setInputProcessor(multiplexer);
+
 
         //create maze via recursion
 //        //put us at position 0,0, and mark that square as visited
@@ -113,6 +167,7 @@ public class MazeScreen implements Screen {
         createMazeWithoutRecursion();
 
     }
+
     private void createMazeWithoutRecursion(){
         //had to do it without recursion because stack is way too large to make a maze
 
@@ -122,12 +177,20 @@ public class MazeScreen implements Screen {
 
         positionStack = new Array<Vector2>();
         int nextSquareDirection;
+        int biasDecider;
         positionStack.add(currentPosition);
         while (positionStack.size > 0) {
 
-            //choose a random direction
-            nextSquareDirection = game.rand.nextInt((5 - 1) + 1) + 1;//1,2,3, or 4
+            //to make longer walls, will randomly give a bias for using the last direction
+            biasDecider = game.rand.nextInt((6 - 1) + 1) + 1;//1,2,3, or 4 or 5
 
+            if(biasDecider<5){
+                nextSquareDirection = lastMovementDirection;
+            }
+            else {
+                //choose a random direction
+                nextSquareDirection = game.rand.nextInt((5 - 1) + 1) + 1;//1,2,3, or 4
+            }
             switch (nextSquareDirection) {
                 case 1:
                     //if it's too high, or we have already visited that square then check the next direction
@@ -140,13 +203,17 @@ public class MazeScreen implements Screen {
                         world.destroyBody(horizontalWalls[(int) currentPosition.x][(int) currentPosition.y + 1]);
                         stage.getRoot().removeActor(horizontalWallActor[(int)currentPosition.x][(int)currentPosition.y +1]);
 
-
                         //travel to that spot now that we can get there
                         currentPosition.y += 1;
+
+                        //add to the current distance
+                        currentDistance +=1;
 
                         //add the current position to the stack
                         positionStack.add(new Vector2(currentPosition));
 
+                        //save our direction for use in tweaking the maze
+                        lastMovementDirection = 1;
                     }
 
                     break;
@@ -165,8 +232,14 @@ public class MazeScreen implements Screen {
                         //travel to that spot now that we can get there
                         currentPosition.x += 1;
 
+                        //add to the current distance
+                        currentDistance +=1;
+
                         //add the current position to the stack
                         positionStack.add(new Vector2(currentPosition));
+
+                        //save our direction for use in tweaking the maze
+                        lastMovementDirection = 2;
                     }
 
 
@@ -186,10 +259,14 @@ public class MazeScreen implements Screen {
                         //travel to that spot now that we can get there
                         currentPosition.y -= 1;
 
+                        //add to the current distance
+                        currentDistance +=1;
+
                         //add the current position to the stack
                         positionStack.add(new Vector2(currentPosition));
 
-
+                        //save our direction for use in tweaking the maze
+                        lastMovementDirection = 3;
                     }
 
                     break;
@@ -208,9 +285,14 @@ public class MazeScreen implements Screen {
                         //travel to that spot now that we can get there
                         currentPosition.x -= 1;
 
+                        //add to the current distance
+                        currentDistance +=1;
+
                         //add the current position to the stack
                         positionStack.add(new Vector2(currentPosition));
 
+                        //save our direction for use in tweaking the maze
+                        lastMovementDirection = 4;
                     }
 
                     break;
@@ -218,15 +300,69 @@ public class MazeScreen implements Screen {
                     break;
             }
 
-            //now that we have checked our random integer, check all of the other directions. If they all pass, pop off stack
-            if (deadEndCheck(currentPosition)) {
-                currentPosition = positionStack.get(positionStack.size -1);
-                positionStack.pop();
-            }
+
             visitedSquares[(int)currentPosition.x][(int)currentPosition.y] = 1;
 
+
+            //now that we have checked our random integer, check all of the other directions. If they all pass, pop off stack
+            if (deadEndCheck(currentPosition)) {
+
+                //check to see if this is the longest current spot, if so, make a note of it
+                if (currentDistance > longestDistance){
+                    longestDistance = currentDistance;
+                    longestDistanceLocation = currentPosition;
+                }
+
+                //remove one from the current distance
+                currentDistance -=1;
+                //go back to the previous position
+                currentPosition = positionStack.pop();
+
+            }
         }
+
+        //create the end at the longest recorded location
+        createEnd((int)longestDistanceLocation.x, (int) longestDistanceLocation.y);
     }
+
+    private void createEnd(int xPosition, int yPosition){
+
+        xPosition *= lineWidth;
+        yPosition *= lineHeight;
+
+        //define body
+        BodyDef bdef = new BodyDef();
+        bdef.position.set(
+                (xPosition + lineWidth/2) / Box2DVars.PPM,
+                (yPosition + lineHeight/2) / Box2DVars.PPM);
+        bdef.type = BodyDef.BodyType.DynamicBody;
+
+        //create body
+        Body body = world.createBody(bdef);
+
+        //define Fixture
+        PolygonShape shape = new PolygonShape();
+        //shape.setRadius(lineWidth<lineHeight ?(lineWidth/2f)/Box2DVars.PPM:(lineHeight/2f)/Box2DVars.PPM);
+        shape.setAsBox(
+                0.9f*(lineWidth/2)/(Box2DVars.PPM),
+                0.9f*(lineHeight/2)/(Box2DVars.PPM));
+
+
+        FixtureDef fdef = new FixtureDef();
+        fdef.shape = shape;
+        body.setSleepingAllowed(false);
+        body.createFixture(fdef).setUserData("end");//a tag to identify this later
+
+        goal = new Goal(
+                game,
+                body,
+                lineWidth<lineHeight ? (lineWidth)/Box2DVars.PPM : (lineHeight)/Box2DVars.PPM  ,
+                lineWidth<lineHeight ? (lineWidth)/Box2DVars.PPM  : (lineHeight)/Box2DVars.PPM );
+        stage.addActor(goal.getGroup());
+
+
+    }
+
     public boolean deadEndCheck(Vector2 currentPosition){
 
         //check the surrounding areas. If any are reachable, then return false. Else return true;
@@ -248,8 +384,23 @@ public class MazeScreen implements Screen {
     @Override
     public void render(float delta) {
 
-        Gdx.gl.glClearColor(0,0,0,1);
+        //reset the background color
+        Gdx.gl.glClearColor(0,.5f,.5f,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        //check if the player hit the end of the maze
+        if(cl.checkEndMaze()){
+            goBackToMenu();
+        }
+
+        //slow down the camera if we are flinging
+        if (flinging) {
+            flingCamera();
+        }
+
+        camera.update();
+
+
 
         //get the accelerometer input
         accelx = Gdx.input.getAccelerometerY();
@@ -259,7 +410,7 @@ public class MazeScreen implements Screen {
         if(accelx >1) {
             if(player.getBody().getLinearVelocity().x < player.PLAYER_MAX_SPEED) {
                 player.getBody().setLinearVelocity(
-                        player.getBody().getLinearVelocity().x + accelx *0.05f,
+                        player.getBody().getLinearVelocity().x + accelx *0.5f,
                         player.getBody().getLinearVelocity().y);
 
                 player.facingRight = true;
@@ -268,9 +419,8 @@ public class MazeScreen implements Screen {
         }
         else if (accelx <-1) {
             if(player.getBody().getLinearVelocity().x > -player.PLAYER_MAX_SPEED) {
-                //player.getBody().applyForceToCenter(-player.FORWARD_FORCE, 0, true);
                 player.getBody().setLinearVelocity(
-                        player.getBody().getLinearVelocity().x + accelx *0.05f,
+                        player.getBody().getLinearVelocity().x + accelx *0.5f,
                         player.getBody().getLinearVelocity().y);
 
                 player.facingRight = false;
@@ -281,7 +431,7 @@ public class MazeScreen implements Screen {
             if(player.getBody().getLinearVelocity().y < player.PLAYER_MAX_SPEED) {
                 player.getBody().setLinearVelocity(
                         player.getBody().getLinearVelocity().x ,
-                        player.getBody().getLinearVelocity().y+ accely *0.05f);
+                        player.getBody().getLinearVelocity().y+ accely *0.5f);
 
                 player.facingRight = true;
 
@@ -289,10 +439,9 @@ public class MazeScreen implements Screen {
         }
         else if (accely <-1) {
             if(player.getBody().getLinearVelocity().y > -player.PLAYER_MAX_SPEED) {
-                //player.getBody().applyForceToCenter(-player.FORWARD_FORCE, 0, true);
                 player.getBody().setLinearVelocity(
                         player.getBody().getLinearVelocity().x,
-                        player.getBody().getLinearVelocity().y+ accely *0.05f);
+                        player.getBody().getLinearVelocity().y+ accely *0.5f);
 
                 player.facingRight = false;
             }
@@ -304,6 +453,7 @@ public class MazeScreen implements Screen {
         world.step(delta,6,3);
 
         player.update(delta);
+
 
         stage.act(delta);
         stage.draw();
@@ -558,13 +708,20 @@ public class MazeScreen implements Screen {
 
         //define Fixture
         CircleShape shape = new CircleShape();
-        shape.setRadius(lineWidth<lineHeight ?(lineWidth/4)/Box2DVars.PPM:(lineHeight/4)/Box2DVars.PPM);
+        shape.setRadius(lineWidth<lineHeight ?(lineWidth/4.6f)/Box2DVars.PPM:(lineHeight/4.6f)/Box2DVars.PPM);
+
+
+
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
-
+        body.setSleepingAllowed(false);
         body.createFixture(fdef).setUserData("player");//a tag to identify this later
 
-        player = new Player(game,body,shape.getRadius()*3,shape.getRadius()*3);
+        player = new Player(
+                game,
+                body,
+                lineWidth<lineHeight ? (lineWidth)/Box2DVars.PPM : (lineHeight)/Box2DVars.PPM  ,
+                lineWidth<lineHeight ? (lineWidth)/Box2DVars.PPM  : (lineHeight)/Box2DVars.PPM );
         stage.addActor(player.getGroup());
     }
 
@@ -586,21 +743,73 @@ public class MazeScreen implements Screen {
         }
         bdef.type = BodyDef.BodyType.StaticBody;
 
+        ///adding chainshape to make it so we don't get stuck on the separating lines/////
+        //use chainShape to prevent getting stuck between boxes
+        ChainShape cs = new ChainShape();
+
+        Vector2[] v = new Vector2[5];
+        if(horizontal) {
+            //we are using 3 corners of the box
+            v[0] = new Vector2(
+                    -(lineWidth / 2) / Box2DVars.PPM ,
+                    -0.003f );
+            v[1] = new Vector2(
+                    -(lineWidth / 2) / Box2DVars.PPM,
+                    .003f);
+            v[2] = new Vector2(
+                    (lineWidth / 2) / Box2DVars.PPM,
+                    .003f);
+            v[3] = new Vector2(
+                    (lineWidth / 2) / Box2DVars.PPM,
+                    -0.003f);
+            v[4] = new Vector2(
+                    -(lineWidth / 2) / Box2DVars.PPM,
+                    -0.003f);
+            cs.createChain(v);
+        }
+        else{//vertical
+            //we are using 3 corners of the box
+            v[0] = new Vector2(
+                    -0.003f,
+                    -(lineHeight / 2) / Box2DVars.PPM
+                    );
+            v[1] = new Vector2(
+                    .003f,
+                    -(lineHeight / 2) / Box2DVars.PPM
+                    );
+            v[2] = new Vector2(
+                    .003f,
+                    (lineHeight / 2) / Box2DVars.PPM
+                    );
+            v[3] = new Vector2(
+                    -0.003f,
+                    (lineHeight / 2) / Box2DVars.PPM
+                    );
+            v[4] = new Vector2(
+                    -0.003f,
+                    (-lineHeight / 2) / Box2DVars.PPM
+                    );
+            cs.createChain(v);
+        }
+        ///////////////////////////////////////
         //create body
         Body body = world.createBody(bdef);
 
         //define Fixture
-        PolygonShape shape = new PolygonShape();
-        if(horizontal) {
-            shape.setAsBox(lineWidth/2 / Box2DVars.PPM, 0.1f / Box2DVars.PPM);
-        }
-        else{
-            shape.setAsBox(0.1f / Box2DVars.PPM, lineHeight/2 / Box2DVars.PPM);
-        }
-        FixtureDef fdef = new FixtureDef();
-        fdef.shape = shape;
+//        PolygonShape shape = new PolygonShape();
+//        if(horizontal) {
+//            shape.setAsBox(lineWidth/2 / Box2DVars.PPM, 0.1f / Box2DVars.PPM);
+//        }
+//        else{
+//            shape.setAsBox(0.1f / Box2DVars.PPM, lineHeight/2 / Box2DVars.PPM);
+//        }
 
+
+        FixtureDef fdef = new FixtureDef();
+        fdef.shape = cs;//changing from shape to cs
+        fdef.friction = 0;
         body.createFixture(fdef).setUserData("wall");//a tag to identify this later
+        cs.dispose();
 
         //add the new body to the array of bodies
         if(horizontal) {
@@ -621,6 +830,7 @@ public class MazeScreen implements Screen {
         wall.setCenterPosition(
                 body.getPosition().x * Box2DVars.PPM,
                 body.getPosition().y * Box2DVars.PPM);
+        wall.setColor(Color.BLUE);
         stage.addActor(wall);
         //add the actor we just put in my using the size
         //wallsArray.add(stage.getActors().get(stage.getActors().size-1));
@@ -632,11 +842,57 @@ public class MazeScreen implements Screen {
         }
     }
 
+    private void flingCamera(){
+        velX *= 0.95f;
+        velY *= 0.95f;
 
-    @Override
-    public void resize(int width, int height) {
+        //update camera to new spot
+        camera.position.set(
+                camera.position.x -velX * Gdx.graphics.getDeltaTime(),
+                camera.position.y + velY * Gdx.graphics.getDeltaTime(),
+                0);
+        //push back into limits
+        pushCameraBackIntoLimits();
+
+        //slow down,and stop flinging if too slow
+        if (Math.abs(velX) < 0.25f) velX = 0;//if velocities are below a threshold, then set to zero
+        if (Math.abs(velY) < 0.25f) velY = 0;
+        if ((velX == 0) && (velY == 0)) {//if both velocities are zero, stop running this flinging
+            flinging = false;
+        }
 
     }
+    private void setStageLimits(){
+        x_left_limit = (camera.viewportWidth *camera.zoom)/2;
+        x_right_limit = game.SCREEN_WIDTH - (camera.viewportWidth*camera.zoom) / 2;
+        y_bottom_limit = (camera.viewportHeight*camera.zoom) / 2;
+        y_top_limit = (game.SCREEN_HEIGHT - (camera.viewportHeight*camera.zoom) /2);
+    }
+    @Override
+    public void resize(int width, int height) {
+        originalZoomLevelX = camera.viewportWidth/width;
+        originalZoomLevelY = camera.viewportHeight/height;
+        currentZoomLevelX = originalZoomLevelX;
+        currentZoomLevelY = originalZoomLevelY;
+    }
+    private boolean isInStageLimits(Vector3 newPosition){
+
+        //if out of bounds in x or y, return false. else it's good.
+        if(newPosition.x < x_left_limit ||newPosition.x > x_right_limit){
+            return false;
+        }
+        if (newPosition.y < y_bottom_limit || newPosition.y > y_top_limit){
+            return false;
+        }
+        else{
+            return true;
+        }
+
+    }
+
+
+
+
 
     @Override
     public void show() {
@@ -662,5 +918,123 @@ public class MazeScreen implements Screen {
     @Override
     public void dispose() {
 
+    }
+
+    class MyGestureListener implements GestureDetector.GestureListener {
+        //gesture listener x and y values are local to the screen. ie, in the middle of the world, still
+        //the x value will be 0 on the left, and the screen width value on the right.
+        Vector3 newPosition;
+
+        @Override
+        public boolean touchDown(float x, float y, int pointer, int button) {
+            initialZoomTouchdown = true;
+            flinging = false;
+            return false;
+        }
+
+        @Override
+        public boolean tap(float x, float y, int count, int button) {
+
+//            TiledMapTileLayer.Cell cell = layer.getCell(col, row);
+            //System.out.println("x: " + x);
+//            camera.zoom = 0.75f;
+//            currentZoomLevelX = originalZoomLevelX * camera.zoom;
+//            currentZoomLevelY = originalZoomLevelY * camera.zoom;
+
+            return false;
+        }
+
+        @Override
+        public boolean longPress(float x, float y) {
+
+            return false;
+        }
+
+        @Override
+        public boolean fling(float velocityX, float velocityY, int button) {
+            //System.out.println("flinging");
+            flinging = true;
+            velX = currentZoomLevelX * velocityX;
+            velY = currentZoomLevelY * velocityY;
+            return false;
+        }
+
+        @Override
+        public boolean pan(float x, float y, float deltaX, float deltaY) {
+            System.out.println("panning");
+
+            //get the new position
+            newPosition = new Vector3(
+                    camera.position.x - (deltaX * currentZoomLevelX),
+                    camera.position.y + (deltaY * currentZoomLevelY),
+                    0
+
+            );
+            camera.position.set(newPosition);
+            pushCameraBackIntoLimits();
+
+
+
+
+            return false;
+        }
+
+        @Override
+        public boolean panStop(float x, float y, int pointer, int button) {
+            System.out.println("stopping panning");
+            movingBlockBeyondBorders = false;
+            return false;
+        }
+
+        @Override
+        public boolean zoom (float originalDistance, float currentDistance){
+
+            if(initialZoomTouchdown){
+                currentCameraZoom = camera.zoom;
+                initialZoomTouchdown = false;
+            }
+
+            float ratio = originalDistance / currentDistance;
+            if((currentCameraZoom * ratio <1)&&(currentCameraZoom*ratio>0.2)) {
+                camera.zoom = currentCameraZoom * ratio;
+                currentZoomLevelX = originalZoomLevelX * camera.zoom;
+                currentZoomLevelY = originalZoomLevelY * camera.zoom;
+
+                //reset the window limits based on the new zoom
+                setStageLimits();
+
+                //if we have zoomed beyond the stage limits, move back in
+                pushCameraBackIntoLimits();
+
+            }
+
+            return false;
+        }
+
+        @Override
+        public boolean pinch (Vector2 initialFirstPointer, Vector2 initialSecondPointer, Vector2 firstPointer, Vector2 secondPointer){
+            System.out.println("pinching");
+
+            return false;
+        }
+    }
+
+    private void goBackToMenu(){
+        game.setScreen(new VictoryScreen(game));
+    }
+
+    private void pushCameraBackIntoLimits(){
+        if(camera.position.x < x_left_limit){
+            camera.position.x = x_left_limit;
+        }
+        else if(camera.position.x > x_right_limit){
+            camera.position.x = x_right_limit;
+        }
+        if(camera.position.y < y_bottom_limit){
+            camera.position.y = y_bottom_limit;
+        }
+        else if(camera.position.y > y_top_limit){
+            camera.position.y = y_top_limit;
+        }
     }
 }

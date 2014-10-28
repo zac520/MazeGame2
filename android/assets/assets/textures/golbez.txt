@@ -1,0 +1,81 @@
+golbez.png
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+golbezfront
+  rotate: false
+  xy: 2, 2
+  size: 32, 47
+  orig: 32, 47
+  offset: 0, 0
+  index: 1
+golbezleft
+  rotate: false
+  xy: 36, 2
+  size: 23, 46
+  orig: 29, 50
+  offset: 4, 2
+  index: 1
+golbezleft
+  rotate: false
+  xy: 61, 2
+  size: 25, 48
+  orig: 29, 50
+  offset: 3, 2
+  index: 2
+golbezleft
+  rotate: false
+  xy: 36, 2
+  size: 23, 46
+  orig: 29, 48
+  offset: 3, 1
+  index: 3
+golbezleft
+  rotate: false
+  xy: 88, 2
+  size: 23, 46
+  orig: 27, 50
+  offset: 3, 3
+  index: 4
+golbezlstill
+  rotate: false
+  xy: 36, 2
+  size: 23, 46
+  orig: 29, 50
+  offset: 4, 2
+  index: 1
+golbezright
+  rotate: false
+  xy: 113, 2
+  size: 23, 46
+  orig: 29, 48
+  offset: 2, 2
+  index: 1
+golbezright
+  rotate: false
+  xy: 138, 2
+  size: 25, 46
+  orig: 29, 48
+  offset: 1, 2
+  index: 2
+golbezright
+  rotate: false
+  xy: 165, 2
+  size: 24, 47
+  orig: 30, 49
+  offset: 3, 2
+  index: 3
+golbezright
+  rotate: false
+  xy: 191, 2
+  size: 24, 45
+  orig: 30, 49
+  offset: 3, 2
+  index: 4
+golbezrstill
+  rotate: false
+  xy: 113, 2
+  size: 23, 46
+  orig: 29, 48
+  offset: 2, 2
+  index: 1

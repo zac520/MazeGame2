@@ -1,0 +1,25 @@
+Maze.png
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Blueberrymuffin
+  rotate: false
+  xy: 2, 2
+  size: 265, 222
+  orig: 265, 222
+  offset: 0, 0
+  index: -1
+CookedbaconX
+  rotate: false
+  xy: 269, 2
+  size: 121, 184
+  orig: 121, 184
+  offset: 0, 0
+  index: -1
+Wall
+  rotate: false
+  xy: 269, 188
+  size: 10, 10
+  orig: 10, 10
+  offset: 0, 0
+  index: -1

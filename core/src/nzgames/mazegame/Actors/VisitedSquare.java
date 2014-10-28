@@ -1,45 +1,38 @@
 package nzgames.mazegame.Actors;
 
+/**
+ * Created by zac520 on 10/27/14.
+ */
 
 import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.Filter;
-import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Group;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Timer;
 import nzgames.mazegame.Handlers.Box2DVars;
 import nzgames.mazegame.MainGame;
 
-import static com.badlogic.gdx.scenes.scene2d.actions.Actions.delay;
-import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
+
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.Filter;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.scenes.scene2d.Group;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import nzgames.mazegame.Handlers.Box2DVars;
+import nzgames.mazegame.MainGame;
 
 /**
  * Created by zac520 on 8/10/14.
  */
-public class Player extends GenericActor {
+public class VisitedSquare extends GenericActor {
 
-    public static  int PLAYER_MAX_SPEED = 2000;
+    public static  int PLAYER_MAX_SPEED = 20;
     public int FORWARD_FORCE = 1;//will be reset based on player weight
     public static  float RUNNING_FRAME_DURATION = 0.2f;
 
-    private Animation swordSlashAnimationRight;
-    private Animation swordSlashAnimationLeft;
-    public boolean isSlashingSword = false;
-    public boolean ableToSlash = true;
     public boolean isMoving = true;
-    Fixture swordSlashRight;
-    Fixture swordSlashLeft;
-    Filter enemiesHitable;
-    Filter enemiesNotHitable;
 
-    public Animation spellAnimation; //I think we will put these in their own class later.
-
-    public Player(MainGame myGame, Body body, float myWidth, float myHeight){
+    public VisitedSquare(MainGame myGame, Body body, float myWidth, float myHeight){
 
         //super(new TextureRegion(myGameScreen.atlas.findRegion("MainCharLeft")));
 
@@ -53,7 +46,7 @@ public class Player extends GenericActor {
         this.FORWARD_FORCE =  FORWARD_FORCE * (int) this.body.getMass();
 
         //load the animations
-        leftAnimation = new Animation(RUNNING_FRAME_DURATION, game.atlas.findRegions("Blueberrymuffin"));
+        leftAnimation = new Animation(RUNNING_FRAME_DURATION, game.atlas.findRegions("CookedbaconX"));
 
         //set the current drawable to the animation
         myDrawable = new TextureRegionDrawable(leftAnimation.getKeyFrame(this.getStateTime(), true));
@@ -65,8 +58,8 @@ public class Player extends GenericActor {
         graphicsGroup = new Group();
         graphicsGroup.addActor(this);
         graphicsGroup.setCenterPosition(
-                body.getPosition().x * Box2DVars.PPM ,
-                body.getPosition().y * Box2DVars.PPM );
+                body.getPosition().x * Box2DVars.PPM,
+                body.getPosition().y * Box2DVars.PPM);
 
     }
     public void update(float delta) {

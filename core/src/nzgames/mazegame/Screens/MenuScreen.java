@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Array;
 import nzgames.mazegame.MainGame;
 
 /**
@@ -28,10 +29,42 @@ public class MenuScreen implements Screen {
     SpriteBatch batch;
     Skin skin;
 
+    private int blocksWide;
+    private int blocksHigh;
+    private float heightToWidthRatio;
+
+    Array<Integer> commonMultiples;
+    Array<Integer> availableSquareSizes;
+
+    private boolean perfectSquares = true;
+
+    private final int EASY_MAZE_WIDTH = 20;
+    private final int MEDIUM_MAZE_WIDTH = 40;
+    private final int HARD_MAZE_WIDTH = 64;
+    private final int RIDICULOUS_MAZE_WIDTH = 128;
+
     public MenuScreen(MainGame pGame) {
 
         game = pGame;
         batch = new SpriteBatch();
+
+        //set the ratio of width to height
+        heightToWidthRatio = (float) game.SCREEN_HEIGHT / (float) game.SCREEN_WIDTH;
+
+        //find the common multiples to determine all sizes of each squares based on screen dimensions
+        long greatestCommonDenominator = gcd((long) game.SCREEN_HEIGHT, (long)game.SCREEN_WIDTH);
+        commonMultiples = new Array<Integer>();
+        fillCommonMultiples(greatestCommonDenominator);//these options allow for a square maze given the screen dimensions. They are in pixels wide for each square
+
+        //convert to blocks in width
+        availableSquareSizes = new Array<Integer>();
+        for(int x = 0; x< commonMultiples.size; x++){
+            availableSquareSizes.add(Gdx.graphics.getWidth()/commonMultiples.get(x));
+        }
+
+        if(availableSquareSizes.size<4){
+            perfectSquares = false; //the screen ratio will not support perfect squares. use rectangles.
+        }
 
         //initialize camera
         camera = new OrthographicCamera();
@@ -54,7 +87,12 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 //set screen
-                game.setScreen(new MazeScreen(game,8,6));
+//                blocksWide = getNearestNumberInArray(availableSquareSizes,20);
+//                blocksHigh = (int) (blocksWide * heightToWidthRatio);
+                blocksWide = getNearestSquareFitWidth(EASY_MAZE_WIDTH);
+                blocksHigh = getNearestSquareFitHeight(blocksWide);
+
+                game.setScreen(new MazeScreen(game,blocksWide,blocksHigh));
             }
         });
         table.add(easyMaze).width(200).height(50);
@@ -65,8 +103,11 @@ public class MenuScreen implements Screen {
         mediumMaze.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                //set screen
-                game.setScreen(new MazeScreen(game,40,30));
+
+                blocksWide = getNearestSquareFitWidth(MEDIUM_MAZE_WIDTH);
+                blocksHigh = getNearestSquareFitHeight(blocksWide);
+
+                game.setScreen(new MazeScreen(game,blocksWide,blocksHigh));
             }
         });
         table.add(mediumMaze).width(200).height(50);
@@ -78,7 +119,10 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 //set screen
-                game.setScreen(new MazeScreen(game,90,60));
+                blocksWide = getNearestSquareFitWidth(HARD_MAZE_WIDTH);
+                blocksHigh = getNearestSquareFitHeight(blocksWide);
+
+                game.setScreen(new MazeScreen(game,blocksWide,blocksHigh));
             }
         });
         table.add(hardMaze).width(200).height(50);
@@ -90,7 +134,11 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 //set screen
-                game.setScreen(new MazeScreen(game,180,120));
+
+                blocksWide = getNearestSquareFitWidth(RIDICULOUS_MAZE_WIDTH);
+                blocksHigh = getNearestSquareFitHeight(blocksWide);
+
+                game.setScreen(new MazeScreen(game,blocksWide,blocksHigh));
             }
         });
         table.add(ridiculousMaze).width(200).height(50);
@@ -115,6 +163,88 @@ public class MenuScreen implements Screen {
 
         stage.act();
         stage.draw();
+    }
+
+    //get the common denominator
+    private static long gcd(long a, long b)
+    {
+        while (b > 0)
+        {
+            long temp = b;
+            b = a % b; // % is remainder
+            a = temp;
+        }
+        return a;
+    }
+    private void fillCommonMultiples(long originalNumber){
+
+        int testNumber = (int) originalNumber;
+
+        while(testNumber >0){
+            if(originalNumber%testNumber == 0){ //if no remainder, then it is an acceptable multiple
+                commonMultiples.add(testNumber);
+            }
+            testNumber--;
+
+        }
+
+
+    }
+
+    private int getNearestNumberInArray(Array myArray, int myNumber) {
+        //http://stackoverflow.com/questions/13318733/get-closest-value-to-a-number-in-array
+        int distance = Math.abs((Integer)myArray.get(0) - myNumber);
+        int idx = 0;
+        for (int c = 1; c < myArray.size; c++) {
+            int cdistance = Math.abs((Integer)myArray.get(c) - myNumber);
+            if (cdistance < distance) {
+                idx = c;
+                distance = cdistance;
+            }
+        }
+        return (Integer)myArray.get(idx);
+    }
+
+    private int getNearestSquareFitWidth(int number){
+        //this function will get the closest fit to the width in blocks that we can evenly divide the screen width in
+        while(number >1){
+            if(game.SCREEN_WIDTH%number ==0){
+                return number;
+            }
+            number -=1;
+        }
+        return number;
+    }
+    private int getNearestSquareFitHeight(int blockWidth){
+        //this function will try to fill up the height with as close to a square based on the width as possible
+        int pixelsPerWidth = game.SCREEN_WIDTH / blockWidth;
+        int closestFit=1;
+        int tempFit = 0;
+
+        //find the best fit in one direction
+        while(pixelsPerWidth >1){
+            if(game.SCREEN_HEIGHT%pixelsPerWidth ==0){
+                closestFit = game.SCREEN_HEIGHT/pixelsPerWidth;//number of blocks high (same as blockWidth)
+                break;
+            }
+            pixelsPerWidth -=1;
+        }
+
+        //reset the pixels per width
+        pixelsPerWidth = game.SCREEN_WIDTH / blockWidth;
+
+        //find the best fit in the other direction
+        while(pixelsPerWidth <100){
+            if(game.SCREEN_HEIGHT%pixelsPerWidth ==0){
+                tempFit = game.SCREEN_HEIGHT/pixelsPerWidth;
+                if(Math.abs(tempFit-blockWidth) < Math.abs(closestFit - blockWidth)) {
+                    closestFit = tempFit;
+                    break;
+                }
+            }
+            pixelsPerWidth +=1;
+        }
+        return closestFit;
     }
 
     @Override
