@@ -17,6 +17,8 @@ import com.badlogic.gdx.utils.Array;
 import nzgames.mazegame.Handlers.SaveManager;
 import nzgames.mazegame.MainGame;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Created by zac520 on 8/10/14.
  */
@@ -51,6 +53,13 @@ public class MenuScreen implements Screen {
     private int numberMediumMazesSolved = 0;
     private int numberHardMazesSolved = 0;
     private int numberRidiculousMazesSolved = 0;
+
+    private float bestEasyTime = 0;
+    private float bestMediumTime = 0;
+    private float bestHardTime = 0;
+    private float bestRidiculousTime = 0;
+
+    private long testTime;
 
     public MenuScreen(MainGame pGame) {
 
@@ -171,10 +180,19 @@ public class MenuScreen implements Screen {
 
         //show frames per second
         batch.begin();
-        font.draw(batch, "Number of Easy Mazes Solved: " + numberEasyMazesSolved, 20, game.SCREEN_HEIGHT -30);
+        //draw the number of mazes solved
+        font.draw(batch, "Number of Easy Mazes Solved: " + numberEasyMazesSolved, 20, game.SCREEN_HEIGHT - 30);
         font.draw(batch, "Number of Medium Mazes Solved: " + numberMediumMazesSolved, 20, game.SCREEN_HEIGHT -50);
         font.draw(batch, "Number of Hard Mazes Solved: " + numberHardMazesSolved, 20, game.SCREEN_HEIGHT -70);
         font.draw(batch, "Number of Ridiculous Mazes Solved: " + numberRidiculousMazesSolved, 20, game.SCREEN_HEIGHT -90);
+
+        //draw the best time for each
+        font.draw(batch, "Best time: " + (bestEasyTime > 0 ? convertPlaytimeToReadable(bestEasyTime) : ""), game.SCREEN_WIDTH/2, game.SCREEN_HEIGHT -30);
+        font.draw(batch, "Best time: " + (bestMediumTime > 0 ? convertPlaytimeToReadable(bestMediumTime) : ""), game.SCREEN_WIDTH/2, game.SCREEN_HEIGHT -50);
+        font.draw(batch, "Best time: " + (bestHardTime > 0 ? convertPlaytimeToReadable(bestHardTime) : ""), game.SCREEN_WIDTH/2, game.SCREEN_HEIGHT -70);
+        font.draw(batch, "Best time: " + (bestRidiculousTime > 0 ? convertPlaytimeToReadable(bestRidiculousTime) : ""), game.SCREEN_WIDTH/2, game.SCREEN_HEIGHT -90);
+
+
 
         batch.end();
 
@@ -265,8 +283,9 @@ public class MenuScreen implements Screen {
     }
     private void loadData() {
         //get the number of games played
-        SaveManager saveManager = new SaveManager(false);
+        SaveManager saveManager = new SaveManager(game.saveEncrypted);
 
+        //load the number of mazes
         if (saveManager.loadDataValue("numberOfEasyMazesSolved", Integer.class) != null) {
             numberEasyMazesSolved = saveManager.loadDataValue("numberOfEasyMazesSolved", Integer.class);
         }
@@ -280,6 +299,34 @@ public class MenuScreen implements Screen {
             numberRidiculousMazesSolved = saveManager.loadDataValue("numberOfRidiculousMazesSolved", Integer.class);
         }
 
+        //load the best times
+        if (saveManager.loadDataValue("bestEasyTime", Float.class) != null) {
+            bestEasyTime = saveManager.loadDataValue("bestEasyTime", Float.class);
+        }
+        if (saveManager.loadDataValue("bestMediumTime", Float.class) != null) {
+            bestMediumTime = saveManager.loadDataValue("bestMediumTime", Float.class);
+        }
+        if (saveManager.loadDataValue("bestHardTime", Float.class) != null) {
+            bestHardTime = saveManager.loadDataValue("bestHardTime", Float.class);
+        }
+        if (saveManager.loadDataValue("bestRidiculousTime", Float.class) != null) {
+            bestRidiculousTime = saveManager.loadDataValue("bestRidiculousTime", Float.class);
+        }
+
+    }
+
+    //convert the long to a readable string in minutes, seconds
+    private String convertPlaytimeToReadable(float time ){
+
+        //convert the float to to a long, then give in milliseconds
+        testTime = (long) time;
+        String returnString = String.format("%d min, %d sec",
+                TimeUnit.SECONDS.toMinutes(testTime),
+                TimeUnit.SECONDS.toSeconds(testTime) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.SECONDS.toMinutes(testTime))
+        );
+
+        return returnString;
     }
     @Override
     public void resize(int width, int height) {

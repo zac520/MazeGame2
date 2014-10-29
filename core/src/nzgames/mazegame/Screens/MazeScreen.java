@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.maps.MapProperties;
@@ -29,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * Created by zac520 on 10/22/14.
@@ -42,6 +46,9 @@ public class MazeScreen implements Screen {
     private World world;
     OrthographicCamera box2DCam;
     Box2DDebugRenderer box2DRenderer;
+    SpriteBatch batch;
+    BitmapFont font;
+
     private boolean debug = false;
     private int lineWidth = 10;
     private int lineHeight = 10;
@@ -67,6 +74,8 @@ public class MazeScreen implements Screen {
 
     private TextureRegion horizontalMazeWall;
 
+    private float playTime = 0;
+    private long testTime;
 
     private float originalZoomLevelX = 1;
     private float originalZoomLevelY = 1;
@@ -98,10 +107,11 @@ public class MazeScreen implements Screen {
 
     private int mazeType;
 
-    Array<Body> hitSensors;
     public MazeScreen(MainGame myGame, int type, int width, int height) {
         game = myGame;
 
+        batch = new SpriteBatch();
+        font = new BitmapFont();
         //save the type of maze so we know what to save when it is done
         mazeType = type;
 
@@ -412,6 +422,8 @@ public class MazeScreen implements Screen {
             goBackToMenu();
         }
 
+
+
         //run a path behind the player
         updatePlayerPath();
 
@@ -507,6 +519,15 @@ public class MazeScreen implements Screen {
         stage.draw();
 
 
+        //update the playtime
+        playTime+=delta;
+        //draw the current playtime
+        batch.begin();
+        font.draw(batch,convertPlaytimeToReadable(playTime),
+                10,
+                game.SCREEN_HEIGHT -30);
+        batch.end();
+
 
         //draw box2d world
         if(debug) {
@@ -521,6 +542,20 @@ public class MazeScreen implements Screen {
             box2DRenderer.render(world, box2DCam.combined);
 
         }
+    }
+
+    //convert the long to a readable string in minutes, seconds
+    private String convertPlaytimeToReadable(float time ){
+
+        //convert the float to to a long, then give in milliseconds
+        testTime = (long) time;
+        String returnString = String.format("%d min, %d sec",
+                TimeUnit.SECONDS.toMinutes(testTime),
+                TimeUnit.SECONDS.toSeconds(testTime) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.SECONDS.toMinutes(testTime))
+        );
+
+        return returnString;
     }
 
     private void updatePlayerPath(){
@@ -1156,34 +1191,74 @@ public class MazeScreen implements Screen {
     void saveNumberOfGamesCompleted(){
 
         //add one to the total number of games played
-        SaveManager saveManager = new SaveManager(false);
+        SaveManager saveManager = new SaveManager(game.saveEncrypted);
         int numGamesPlayed = 0;
+        float bestTime = playTime;
+
         if(mazeType == game.EASY_MAZE_TYPE ){
+            //check if we have any previous data to add to
             if(saveManager.loadDataValue("numberOfEasyMazesSolved",Integer.class)!=null){
                 numGamesPlayed = saveManager.loadDataValue("numberOfEasyMazesSolved",Integer.class);
             }
+            //check against previous data
+            if(saveManager.loadDataValue("bestEasyTime",Float.class)!=null){
+                if(bestTime > (Float) saveManager.loadDataValue("bestEasyTime",Float.class)) {
+                    bestTime = saveManager.loadDataValue("bestEasyTime", Float.class);
+                }
+            }
+
+            //actually save the data
             saveManager.saveDataValue("numberOfEasyMazesSolved",numGamesPlayed +1);
+            saveManager.saveDataValue("bestEasyTime",bestTime);
 
         }
         else if(mazeType == game.MEDIUM_MAZE_TYPE){
             if(saveManager.loadDataValue("numberOfMediumMazesSolved",Integer.class)!=null){
                 numGamesPlayed = saveManager.loadDataValue("numberOfMediumMazesSolved",Integer.class);
             }
+
+            //check against previous data
+            if(saveManager.loadDataValue("bestMediumTime",Float.class)!=null){
+                if(bestTime > (Float) saveManager.loadDataValue("bestMediumTime",Float.class)) {
+                    bestTime = saveManager.loadDataValue("bestMediumTime", Float.class);
+                }
+            }
+
             saveManager.saveDataValue("numberOfMediumMazesSolved",numGamesPlayed +1);
+            saveManager.saveDataValue("bestMediumTime",bestTime);
 
         }
         else if(mazeType == game.HARD_MAZE_TYPE){
             if(saveManager.loadDataValue("numberOfHardMazesSolved",Integer.class)!=null){
                 numGamesPlayed = saveManager.loadDataValue("numberOfHardMazesSolved",Integer.class);
             }
+
+            //check against previous data
+            if(saveManager.loadDataValue("bestHardTime",Float.class)!=null){
+                if(bestTime > (Float) saveManager.loadDataValue("bestHardTime",Float.class)) {
+                    bestTime = saveManager.loadDataValue("bestHardTime", Float.class);
+                }
+            }
+
             saveManager.saveDataValue("numberOfHardMazesSolved",numGamesPlayed +1);
+            saveManager.saveDataValue("bestHardTime",bestTime);
 
         }
         else if(mazeType == game.RIDICULOUS_MAZE_TYPE){
+
             if(saveManager.loadDataValue("numberOfRidiculousMazesSolved",Integer.class)!=null){
                 numGamesPlayed = saveManager.loadDataValue("numberOfRidiculousMazesSolved",Integer.class);
             }
+
+            //check against previous data
+            if(saveManager.loadDataValue("bestRidiculousTime",Float.class)!=null){
+                if(bestTime > (Float) saveManager.loadDataValue("bestRidiculousTime",Float.class)) {
+                    bestTime = saveManager.loadDataValue("bestRidiculousTime", Float.class);
+                }
+            }
             saveManager.saveDataValue("numberOfRidiculousMazesSolved",numGamesPlayed +1);
+            saveManager.saveDataValue("bestRidiculousTime",bestTime);
+
         }
 
     }

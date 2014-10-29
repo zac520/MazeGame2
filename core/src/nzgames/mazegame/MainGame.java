@@ -15,6 +15,9 @@ import nzgames.mazegame.Screens.VictoryScreen;
 import java.util.Random;
 
 public class MainGame extends Game {
+
+    public boolean saveEncrypted = true;
+
     public int SCREEN_WIDTH = 480;
     public int SCREEN_HEIGHT = 360;
 
