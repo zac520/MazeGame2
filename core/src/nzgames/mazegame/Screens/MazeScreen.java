@@ -107,10 +107,20 @@ public class MazeScreen implements Screen {
 
     private int mazeType;
 
+    Actor [][] playerPath;
+
+    /**box2d variables**/
+    private float accum = 0f;
+    private final float step = 1f / 80f;
+    private final float maxAccum = 1f / 20f;
+
+
     //used for loading progress percent
     private int totalSquaresToVisit = 0;
     private int totalVisitedSquares = 0;
 
+    private int xBlockValue;
+    private int yBlockValue;
     public MazeScreen(MainGame myGame, int type, int width, int height) {
         game = myGame;
 
@@ -151,7 +161,7 @@ public class MazeScreen implements Screen {
         box2DCam.setToOrtho(false, game.SCREEN_WIDTH / Box2DVars.PPM, game.SCREEN_HEIGHT / Box2DVars.PPM);
 
         //add the world for the box2d bodies
-        world = new World(new Vector2(0, 0), false);
+        world = new World(new Vector2(0, 0), true);
         cl = new MyContactListener();
         world.setContactListener(cl);
 
@@ -204,6 +214,10 @@ public class MazeScreen implements Screen {
         //zero out the visited array (this time the player will visit as maze is traversed)
         game.loadingProgress = "Resetting visited areas";
         zeroOutVisitedArray();
+
+        //create blank actors
+        //this did not add any runtime savings
+        //createBlankActorsForPath();
 
         //reset the loading progess message to nothing
         game.loadingProgress = "";
@@ -460,7 +474,8 @@ public class MazeScreen implements Screen {
     public void render(float delta) {
 
         //reset the background color
-        Gdx.gl.glClearColor(0,.5f,.5f,1);
+        Gdx.gl.glClearColor(0,.5f,.5f,1);//teal
+        //Gdx.gl.glClearColor(1,.5f,.5f,1);nice pink color
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         //check if the player hit the end of the maze
@@ -470,8 +485,7 @@ public class MazeScreen implements Screen {
 
 
 
-        //run a path behind the player
-        updatePlayerPath();
+
 
         //slow down the camera if we are flinging
         if (flinging) {
@@ -556,7 +570,20 @@ public class MazeScreen implements Screen {
         //reposition player based on input
         //player.getBody().applyForceToCenter(accelx,accely,true);
 
-        world.step(delta,6,3);
+        //use this accumulator to make sure if there is graphics lag we don't get a giant physics movement, just several
+        //small ones
+        accum += delta;
+        accum = Math.min(accum, maxAccum);
+        while (accum > step) {
+            world.step(step,60,10);
+            accum -= step;
+
+            //run a path behind the player
+            updatePlayerPath();
+        }
+        world.step(accum,60,10);
+        accum = 0;
+        //world.step(delta,6,3);
 
         player.update(delta);
 
@@ -603,19 +630,40 @@ public class MazeScreen implements Screen {
 
         return returnString;
     }
+    private void createBlankActorsForPath(){
+        playerPath = new Actor[blocksWide][blocksHigh];
+        for(int x = 0; x< blocksWide; x++){
+            for(int y = 0; y< blocksHigh; y++){
+                //create an image in the appropriate spot and add it to the stage
+                //TextureRegion myTextureRegion = game.atlas.findRegion("Wall");
+                Image pathMarkerImage = new Image(horizontalMazeWall);
+                pathMarkerImage.setSize(lineWidth ,lineHeight);
+                pathMarkerImage.setPosition(
+                        x * lineWidth,
+                        y * lineHeight
+                );
+                pathMarkerImage.setColor(Color.TEAL);
+                stage.addActor(pathMarkerImage);
+                playerPath[x][y] = stage.getActors().get(stage.getActors().size -1);//add to our array of the path actors
+                //move the tile to the back so we don't draw on top of player
+                stage.getActors().get(stage.getActors().size -1).toBack();
+            }
+        }
 
+    }
     private void updatePlayerPath(){
         //remove add to visited path if we have a new floor tile to check
-        int xBlockValue = (int) (player.getBody().getPosition().x * Box2DVars.PPM)/ lineWidth;
-        int yBlockValue = (int) (player.getBody().getPosition().y * Box2DVars.PPM) / lineHeight;
+        xBlockValue = (int) (player.getBody().getPosition().x * Box2DVars.PPM)/ lineWidth;
+        yBlockValue = (int) (player.getBody().getPosition().y * Box2DVars.PPM) / lineHeight;
+
+
         //System.out.println("x: " + xBlockValue + "y: " + yBlockValue);
 
         if(visitedSquares[xBlockValue][yBlockValue] ==0){//if we have never visited this square, add an actor to mark path
 
             //create an image in the appropriate spot and add it to the stage
-            TextureRegion myTextureRegion = game.atlas.findRegion("Wall");
-
-            Image pathMarkerImage = new Image(myTextureRegion);
+            //TextureRegion myTextureRegion = game.atlas.findRegion("Wall");
+            Image pathMarkerImage = new Image(horizontalMazeWall);
             pathMarkerImage.setSize(lineWidth ,lineHeight);
             pathMarkerImage.setPosition(
                     xBlockValue * lineWidth,
@@ -625,6 +673,7 @@ public class MazeScreen implements Screen {
             stage.addActor(pathMarkerImage);
             //move the tile to the back so we don't draw on top of player
             stage.getActors().get(stage.getActors().size -1).toBack();
+            //stage.getRoot().removeActor(playerPath[xBlockValue][yBlockValue]);
 
             //now mark that spot as visited
             visitedSquares[xBlockValue][yBlockValue] =1;
