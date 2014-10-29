@@ -7,6 +7,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.maps.MapProperties;
@@ -19,10 +20,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.Array;
 import nzgames.mazegame.Actors.Goal;
 import nzgames.mazegame.Actors.Player;
+import nzgames.mazegame.Actors.VisitedSquare;
 import nzgames.mazegame.Handlers.Box2DVars;
 import nzgames.mazegame.Handlers.MyContactListener;
 import nzgames.mazegame.MainGame;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -94,6 +97,8 @@ public class MazeScreen implements Screen {
 
     private MyContactListener cl;
     private Goal goal;
+
+    Array<Body> hitSensors;
     public MazeScreen(MainGame myGame, int width, int height) {
         game = myGame;
 
@@ -130,18 +135,16 @@ public class MazeScreen implements Screen {
 
         //initialize the visited array
         visitedSquares = new int[blocksWide][blocksHigh];
-        for (int x = 0; x < blocksWide; x++) {
-            for (int y = 0; y < blocksHigh; y++) {
-                //make all as zero to represent false, or unvisited
-                visitedSquares[x][y] = 0;
-            }
-        }
+        zeroOutVisitedArray();
 
 
         horizontalMazeWall = new TextureRegion(game.atlas.findRegion("Wall"));
 
         //add up all the walls (we destroy them as we make the maze, leaving only the usable maze walls)
         addAllMazeWalls();
+
+        //add the floor sensors--this was too slow
+        //addAllMazeSquareSensors();
 
         //create the maze border
         drawBorder();
@@ -166,8 +169,19 @@ public class MazeScreen implements Screen {
         //test
         createMazeWithoutRecursion();
 
+        //zero out the visited array (this time the player will visit as maze is traversed)
+        zeroOutVisitedArray();
     }
 
+    private void zeroOutVisitedArray(){
+        //initialize the visited array
+        for (int x = 0; x < blocksWide; x++) {
+            for (int y = 0; y < blocksHigh; y++) {
+                //make all as zero to represent false, or unvisited
+                visitedSquares[x][y] = 0;
+            }
+        }
+    }
     private void createMazeWithoutRecursion(){
         //had to do it without recursion because stack is way too large to make a maze
 
@@ -349,6 +363,7 @@ public class MazeScreen implements Screen {
 
 
         FixtureDef fdef = new FixtureDef();
+        fdef.isSensor = true;
         fdef.shape = shape;
         body.setSleepingAllowed(false);
         body.createFixture(fdef).setUserData("end");//a tag to identify this later
@@ -392,6 +407,9 @@ public class MazeScreen implements Screen {
         if(cl.checkEndMaze()){
             goBackToMenu();
         }
+
+        //run a path behind the player
+        updatePlayerPath();
 
         //slow down the camera if we are flinging
         if (flinging) {
@@ -475,6 +493,32 @@ public class MazeScreen implements Screen {
         }
     }
 
+    private void updatePlayerPath(){
+        //remove add to visited path if we have a new floor tile to check
+        int xBlockValue = (int) (player.getBody().getPosition().x * Box2DVars.PPM)/ lineWidth;
+        int yBlockValue = (int) (player.getBody().getPosition().y * Box2DVars.PPM) / lineHeight;
+        //System.out.println("x: " + xBlockValue + "y: " + yBlockValue);
+
+        if(visitedSquares[xBlockValue][yBlockValue] ==0){//if we have never visited this square, add an actor to mark path
+
+            //create an image in the appropriate spot and add it to the stage
+            TextureRegion myTextureRegion = game.atlas.findRegion("Wall");
+
+            Image pathMarkerImage = new Image(myTextureRegion);
+            pathMarkerImage.setSize(lineWidth ,lineHeight);
+            pathMarkerImage.setPosition(
+                    xBlockValue * lineWidth,
+                    yBlockValue * lineHeight
+            );
+            pathMarkerImage.setColor(Color.YELLOW);
+            stage.addActor(pathMarkerImage);
+            //move the tile to the back so we don't draw on top of player
+            stage.getActors().get(stage.getActors().size -1).toBack();
+
+            //now mark that spot as visited
+            visitedSquares[xBlockValue][yBlockValue] =1;
+        }
+    }
     private void createDFSMaze(Vector2 currentPosition){
 
 
@@ -594,7 +638,7 @@ public class MazeScreen implements Screen {
         horizontalWallActor = new Actor[blocksWide][blocksHigh];
 
 
-        //create all of the verticalWalls
+        //create all of the walls
         for(int x = 0; x< blocksWide; x++){
             for(int y = 0; y< blocksHigh; y++){
                 createLine(x, y, true);
@@ -603,6 +647,51 @@ public class MazeScreen implements Screen {
         }
 
     }
+//    private void addAllMazeSquareSensors(){
+//        //create all of the walls
+//        for(int x = 0; x< blocksWide; x++){
+//            for(int y = 0; y< blocksHigh; y++){
+//                addSquareSensor(x, y);
+//                addSquareSensor(x, y);
+//            }
+//        }
+//    }
+//    private void addSquareSensor(int xPosition, int yPosition){
+//
+//        xPosition *= lineWidth;
+//        yPosition *= lineHeight;
+//
+//        //define body
+//        BodyDef bdef = new BodyDef();
+//
+//        bdef.position.set(
+//                (xPosition + lineWidth/2) / Box2DVars.PPM,
+//                (yPosition + lineHeight/2) / Box2DVars.PPM);
+//        bdef.type = BodyDef.BodyType.DynamicBody;
+//
+//        //create body
+//        Body body = world.createBody(bdef);
+//
+//
+//        //define Fixture
+//        PolygonShape shape = new PolygonShape();
+//        //shape.setRadius(lineWidth<lineHeight ?(lineWidth/2f)/Box2DVars.PPM:(lineHeight/2f)/Box2DVars.PPM);
+//        shape.setAsBox(
+//                0.9f*(lineWidth/2)/(Box2DVars.PPM),
+//                0.9f*(lineHeight/2)/(Box2DVars.PPM));
+//
+//
+//        FixtureDef fdef = new FixtureDef();
+//        fdef.isSensor = true;
+//        fdef.shape = shape;
+//        //it is a sensor, and can only hit the player
+//        fdef.filter.categoryBits = Box2DVars.BIT_SENSOR;
+//        fdef.filter.maskBits = Box2DVars.BIT_PLAYER;
+//        body.setSleepingAllowed(false);
+//        body.createFixture(fdef).setUserData("floorSensor");//a tag to identify this later
+//
+//    }
+
     private void drawBorder(){
         //we cannot be contained within a box with box 2d. We need 4 separate lines
 
@@ -623,6 +712,7 @@ public class MazeScreen implements Screen {
         //now add a matching actor for that
         Image wall = new Image(horizontalMazeWall);
         wall.setSize(game.SCREEN_WIDTH,1.25f);
+        wall.setColor(Color.BLACK);
         wall.setCenterPosition(
                 body.getPosition().x * Box2DVars.PPM,
                 body.getPosition().y * Box2DVars.PPM);
@@ -645,6 +735,7 @@ public class MazeScreen implements Screen {
         //add the actor
         wall = new Image(horizontalMazeWall);
         wall.setSize(game.SCREEN_WIDTH,1.25f);
+        wall.setColor(Color.BLACK);
         wall.setCenterPosition(
                 body.getPosition().x * Box2DVars.PPM,
                 body.getPosition().y * Box2DVars.PPM);
@@ -668,6 +759,7 @@ public class MazeScreen implements Screen {
         //add the actor
         wall = new Image(horizontalMazeWall);
         wall.setSize(1.25f,game.SCREEN_HEIGHT);
+        wall.setColor(Color.BLACK);
         wall.setCenterPosition(
                 body.getPosition().x * Box2DVars.PPM,
                 body.getPosition().y * Box2DVars.PPM);
@@ -690,6 +782,7 @@ public class MazeScreen implements Screen {
         //add the actor
         wall = new Image(horizontalMazeWall);
         wall.setSize(1.25f,game.SCREEN_HEIGHT);
+        wall.setColor(Color.BLACK);
         wall.setCenterPosition(
                 body.getPosition().x * Box2DVars.PPM,
                 body.getPosition().y * Box2DVars.PPM);
@@ -714,6 +807,7 @@ public class MazeScreen implements Screen {
 
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
+        fdef.filter.categoryBits = Box2DVars.BIT_PLAYER;
         body.setSleepingAllowed(false);
         body.createFixture(fdef).setUserData("player");//a tag to identify this later
 
@@ -808,6 +902,7 @@ public class MazeScreen implements Screen {
         FixtureDef fdef = new FixtureDef();
         fdef.shape = cs;//changing from shape to cs
         fdef.friction = 0;
+        fdef.filter.categoryBits = Box2DVars.BIT_WALL;
         body.createFixture(fdef).setUserData("wall");//a tag to identify this later
         cs.dispose();
 
@@ -830,7 +925,7 @@ public class MazeScreen implements Screen {
         wall.setCenterPosition(
                 body.getPosition().x * Box2DVars.PPM,
                 body.getPosition().y * Box2DVars.PPM);
-        wall.setColor(Color.BLUE);
+        wall.setColor(Color.BLACK);
         stage.addActor(wall);
         //add the actor we just put in my using the size
         //wallsArray.add(stage.getActors().get(stage.getActors().size-1));

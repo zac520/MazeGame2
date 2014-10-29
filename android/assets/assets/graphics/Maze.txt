@@ -19,7 +19,7 @@ CookedbaconX
 Wall
   rotate: false
   xy: 269, 188
-  size: 10, 10
-  orig: 10, 10
+  size: 50, 50
+  orig: 50, 50
   offset: 0, 0
   index: -1

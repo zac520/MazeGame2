@@ -9,8 +9,14 @@ import com.badlogic.gdx.utils.Array;
 public class MyContactListener implements ContactListener {
 
     private boolean endMaze = false;
+
+    private Array<Body> sensorsThatWereHit;
+
+
+
     public MyContactListener(){
         super();
+        sensorsThatWereHit = new Array<Body>();
     }
     //called when two fixtures begin to collide
     public void beginContact (Contact c){
@@ -33,6 +39,20 @@ public class MyContactListener implements ContactListener {
             }
         }
 
+//        //if "floorSensor" and "player" collide, then change the color of the floor
+//        if(fa.getUserData() != null && fa.getUserData().equals("floorSensor")){
+//            if(fb.getUserData() != null && fb.getUserData().equals("player")) {
+//                System.out.println(fa.getBody().getPosition());
+//                sensorsThatWereHit.add(fa.getBody());
+//            }
+//
+//        }
+//        if(fb.getUserData() != null && fb.getUserData().equals("floorSensor")){
+//            if(fa.getUserData() != null && fa.getUserData().equals("player")) {
+//                System.out.println(fb.getBody().getPosition());
+//                sensorsThatWereHit.add(fb.getBody());
+//            }
+//        }
     }
 
     //called when two fixtures no longer collide
@@ -49,6 +69,9 @@ public class MyContactListener implements ContactListener {
     //whatever happens after
     public void postSolve (Contact c, ContactImpulse ci) {}
 
+    public Array getSensorsHit(){
+        return sensorsThatWereHit;
+    }
     public boolean checkEndMaze(){
         return endMaze;
     }

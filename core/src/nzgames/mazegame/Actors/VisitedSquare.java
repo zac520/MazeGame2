@@ -46,7 +46,7 @@ public class VisitedSquare extends GenericActor {
         this.FORWARD_FORCE =  FORWARD_FORCE * (int) this.body.getMass();
 
         //load the animations
-        leftAnimation = new Animation(RUNNING_FRAME_DURATION, game.atlas.findRegions("CookedbaconX"));
+        leftAnimation = new Animation(RUNNING_FRAME_DURATION, game.atlas.findRegions("Wall"));
 
         //set the current drawable to the animation
         myDrawable = new TextureRegionDrawable(leftAnimation.getKeyFrame(this.getStateTime(), true));

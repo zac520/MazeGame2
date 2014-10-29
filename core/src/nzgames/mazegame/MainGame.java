@@ -32,6 +32,13 @@ public class MainGame extends Game {
 
         rand = new Random();//seed this for any variable thing to use later
         atlas = new TextureAtlas(Gdx.files.internal("assets/graphics/Maze.txt"));
+
+        //need to learn about filters. For now, this allows me to add two actors side by side without a feathering effect between them
+        //(makes it seamless)
+        Texture myTexture = atlas.getTextures().first();
+        myTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+
         setScreen(new MenuScreen(this));
     }
 
