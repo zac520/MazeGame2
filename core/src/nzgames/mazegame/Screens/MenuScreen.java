@@ -3,6 +3,8 @@ package nzgames.mazegame.Screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.assets.AssetDescriptor;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -14,9 +16,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.async.AsyncExecutor;
+import com.badlogic.gdx.utils.async.AsyncTask;
 import nzgames.mazegame.Handlers.SaveManager;
 import nzgames.mazegame.MainGame;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -31,7 +37,8 @@ public class MenuScreen implements Screen {
     Stage stage;
     SpriteBatch batch;
     Skin skin;
-
+    private boolean changeToMazeScreen = false;
+    private java.util.Timer autoModeTimer;
 
     private int blocksWide;
     private int blocksHigh;
@@ -60,6 +67,8 @@ public class MenuScreen implements Screen {
     private float bestRidiculousTime = 0;
 
     private long testTime;
+
+    private int mazeType;
 
     public MenuScreen(MainGame pGame) {
 
@@ -113,8 +122,16 @@ public class MenuScreen implements Screen {
 //                blocksHigh = (int) (blocksWide * heightToWidthRatio);
                 blocksWide = getNearestSquareFitWidth(EASY_MAZE_WIDTH);
                 blocksHigh = getNearestSquareFitHeight(blocksWide);
+                autoModeTimer = new Timer();
+                autoModeTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        //Your code goes Here
+                        game.setScreen(new MazeScreen(game,game.EASY_MAZE_TYPE,blocksWide,blocksHigh));
 
-                game.setScreen(new MazeScreen(game,game.EASY_MAZE_TYPE,blocksWide,blocksHigh));
+                    }
+                }, 0);
+                //game.setScreen(new MazeScreen(game,game.EASY_MAZE_TYPE,blocksWide,blocksHigh));
             }
         });
         table.add(easyMaze).width(200).height(50);
@@ -129,7 +146,17 @@ public class MenuScreen implements Screen {
                 blocksWide = getNearestSquareFitWidth(MEDIUM_MAZE_WIDTH);
                 blocksHigh = getNearestSquareFitHeight(blocksWide);
 
-                game.setScreen(new MazeScreen(game,game.MEDIUM_MAZE_TYPE,blocksWide,blocksHigh));
+                autoModeTimer = new Timer();
+                autoModeTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        //Your code goes Here
+                        game.setScreen(new MazeScreen(game,game.MEDIUM_MAZE_TYPE,blocksWide,blocksHigh));
+
+                    }
+                }, 0);
+
+                //game.setScreen(new MazeScreen(game,game.MEDIUM_MAZE_TYPE,blocksWide,blocksHigh));
             }
         });
         table.add(mediumMaze).width(200).height(50);
@@ -144,7 +171,17 @@ public class MenuScreen implements Screen {
                 blocksWide = getNearestSquareFitWidth(HARD_MAZE_WIDTH);
                 blocksHigh = getNearestSquareFitHeight(blocksWide);
 
-                game.setScreen(new MazeScreen(game,game.HARD_MAZE_TYPE,blocksWide,blocksHigh));
+                autoModeTimer = new Timer();
+                autoModeTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        //Your code goes Here
+                        game.setScreen(new MazeScreen(game,game.HARD_MAZE_TYPE,blocksWide,blocksHigh));
+
+                    }
+                }, 0);
+
+                //game.setScreen(new MazeScreen(game,game.HARD_MAZE_TYPE,blocksWide,blocksHigh));
             }
         });
         table.add(hardMaze).width(200).height(50);
@@ -156,11 +193,21 @@ public class MenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 //set screen
-
                 blocksWide = getNearestSquareFitWidth(RIDICULOUS_MAZE_WIDTH);
                 blocksHigh = getNearestSquareFitHeight(blocksWide);
 
-                game.setScreen(new MazeScreen(game,game.RIDICULOUS_MAZE_TYPE,blocksWide,blocksHigh));
+                autoModeTimer = new Timer();
+                autoModeTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        //Your code goes Here
+                        game.setScreen(new MazeScreen(game,game.RIDICULOUS_MAZE_TYPE,blocksWide,blocksHigh));
+
+                    }
+                }, 0);
+
+                //game.setScreen(new MazeScreen(game,game.RIDICULOUS_MAZE_TYPE,blocksWide,blocksHigh));
+
             }
         });
         table.add(ridiculousMaze).width(200).height(50);
@@ -192,12 +239,18 @@ public class MenuScreen implements Screen {
         font.draw(batch, "Best time: " + (bestHardTime > 0 ? convertPlaytimeToReadable(bestHardTime) : ""), game.SCREEN_WIDTH/2, game.SCREEN_HEIGHT -70);
         font.draw(batch, "Best time: " + (bestRidiculousTime > 0 ? convertPlaytimeToReadable(bestRidiculousTime) : ""), game.SCREEN_WIDTH/2, game.SCREEN_HEIGHT -90);
 
+        //draw the loading progress, if applicable, and the loading percent, if applicable
+        if(!game.loadingProgress.isEmpty()){
+            font.draw(batch, game.loadingProgress +"  "+  (game.loadingProgressPercent>-1?(String.valueOf(game.loadingProgressPercent) + "%"):""), 10, 30);
+
+        }
 
 
         batch.end();
 
         stage.act();
         stage.draw();
+
     }
 
     //get the common denominator

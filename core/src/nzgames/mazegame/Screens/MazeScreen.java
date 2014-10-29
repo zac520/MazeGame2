@@ -107,11 +107,19 @@ public class MazeScreen implements Screen {
 
     private int mazeType;
 
+    //used for loading progress percent
+    private int totalSquaresToVisit = 0;
+    private int totalVisitedSquares = 0;
+
     public MazeScreen(MainGame myGame, int type, int width, int height) {
         game = myGame;
 
-        batch = new SpriteBatch();
-        font = new BitmapFont();
+        //batch = new SpriteBatch();
+        //font = new BitmapFont();
+
+        batch = game.batch;
+        font = game.font;
+
         //save the type of maze so we know what to save when it is done
         mazeType = type;
 
@@ -127,11 +135,16 @@ public class MazeScreen implements Screen {
         setStageLimits();
 
         //start the stage with the camera
-        stage= new Stage();
+        //stage= new Stage();
+        //stage.getViewport().setCamera(camera);
+        stage = game.stage;
         stage.getViewport().setCamera(camera);
 
+
+
         //set up box2d renderer
-        box2DRenderer = new Box2DDebugRenderer();
+        //box2DRenderer = new Box2DDebugRenderer();
+        box2DRenderer = game.box2DRenderer;
 
         //set up box2dcam
         box2DCam = new OrthographicCamera();
@@ -147,6 +160,7 @@ public class MazeScreen implements Screen {
         lineHeight =  game.SCREEN_HEIGHT / blocksHigh;
 
         //initialize the visited array
+        game.loadingProgress = "Initializing visited Array";
         visitedSquares = new int[blocksWide][blocksHigh];
         zeroOutVisitedArray();
 
@@ -154,12 +168,14 @@ public class MazeScreen implements Screen {
         horizontalMazeWall = new TextureRegion(game.atlas.findRegion("Wall"));
 
         //add up all the walls (we destroy them as we make the maze, leaving only the usable maze walls)
+        game.loadingProgress = "Adding all maze walls";
         addAllMazeWalls();
 
         //add the floor sensors--this was too slow
         //addAllMazeSquareSensors();
 
         //create the maze border
+        game.loadingProgress = "Drawing maze border";
         drawBorder();
 
         //create a circle at the starting point
@@ -169,7 +185,8 @@ public class MazeScreen implements Screen {
         //need a multiplexor so that the user can touch the level, or the user interface
         InputMultiplexer multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(new GestureDetector(new MyGestureListener()));
-        multiplexer.addProcessor(new MyInputProcessor());
+        //multiplexer.addProcessor(new MyInputProcessor());
+        multiplexer.addProcessor(game.myInputProcessor); //input processor uses a Stage, which we cannot create asynchronously
         multiplexer.addProcessor(stage);
         Gdx.input.setInputProcessor(multiplexer);
 
@@ -181,10 +198,16 @@ public class MazeScreen implements Screen {
         //createDFSMaze(currentPosition);
 
         //test
+        game.loadingProgress = "Creating the actual maze";
         createMazeWithoutRecursion();
 
         //zero out the visited array (this time the player will visit as maze is traversed)
+        game.loadingProgress = "Resetting visited areas";
         zeroOutVisitedArray();
+
+        //reset the loading progess message to nothing
+        game.loadingProgress = "";
+
     }
 
     private void zeroOutVisitedArray(){
@@ -198,6 +221,10 @@ public class MazeScreen implements Screen {
     }
     private void createMazeWithoutRecursion(){
         //had to do it without recursion because stack is way too large to make a maze
+
+
+        //calculate the total number of squares to visit
+        totalSquaresToVisit = blocksHigh * blocksWide;
 
         //put us at position 0,0, and mark that square as visited
         Vector2 currentPosition = new Vector2(0, 0);
@@ -240,6 +267,9 @@ public class MazeScreen implements Screen {
                         //add the current position to the stack
                         positionStack.add(new Vector2(currentPosition));
 
+                        //add to the total squares visited
+                        totalVisitedSquares +=1;
+
                         //save our direction for use in tweaking the maze
                         lastMovementDirection = 1;
                     }
@@ -265,6 +295,9 @@ public class MazeScreen implements Screen {
 
                         //add the current position to the stack
                         positionStack.add(new Vector2(currentPosition));
+
+                        //add to the total squares visited
+                        totalVisitedSquares +=1;
 
                         //save our direction for use in tweaking the maze
                         lastMovementDirection = 2;
@@ -293,6 +326,9 @@ public class MazeScreen implements Screen {
                         //add the current position to the stack
                         positionStack.add(new Vector2(currentPosition));
 
+                        //add to the total squares visited
+                        totalVisitedSquares +=1;
+
                         //save our direction for use in tweaking the maze
                         lastMovementDirection = 3;
                     }
@@ -318,6 +354,9 @@ public class MazeScreen implements Screen {
 
                         //add the current position to the stack
                         positionStack.add(new Vector2(currentPosition));
+
+                        //add to the total squares visited
+                        totalVisitedSquares +=1;
 
                         //save our direction for use in tweaking the maze
                         lastMovementDirection = 4;
@@ -347,10 +386,17 @@ public class MazeScreen implements Screen {
                 currentPosition = positionStack.pop();
 
             }
+
+            game.loadingProgressPercent = (int) (((float)totalVisitedSquares / (float)totalSquaresToVisit)*100);
+
         }
 
         //create the end at the longest recorded location
         createEnd((int)longestDistanceLocation.x, (int) longestDistanceLocation.y);
+
+        //reset the loading progress to -1 so we don't print it anywhere.
+        game.loadingProgressPercent = -1;
+
     }
 
     private void createEnd(int xPosition, int yPosition){
@@ -1182,6 +1228,15 @@ public class MazeScreen implements Screen {
     private void goBackToMenu(){
         //save the end of game
         saveNumberOfGamesCompleted();
+
+        //reset all of our shared variables
+        game.box2DRenderer = new Box2DDebugRenderer();
+        game.stage = new Stage();
+        game.batch = new SpriteBatch();
+        game.font = new BitmapFont();
+        game.myInputProcessor = new MyInputProcessor();
+        game.loadingProgress = new String();
+
 
         //run the victory animation, then return to the menu
         game.setScreen(new VictoryScreen(game));
