@@ -21,10 +21,9 @@ import com.badlogic.gdx.utils.Array;
 import nzgames.mazegame.Actors.Goal;
 import nzgames.mazegame.Actors.Player;
 import nzgames.mazegame.Actors.VisitedSquare;
-import nzgames.mazegame.Handlers.Box2DVars;
-import nzgames.mazegame.Handlers.MyContactListener;
+import nzgames.mazegame.Handlers.*;
 import nzgames.mazegame.MainGame;
-
+import nzgames.mazegame.Screens.MenuScreen;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +34,6 @@ import java.util.Queue;
  * Created by zac520 on 10/22/14.
  */
 public class MazeScreen implements Screen {
-
     //TODO add timer as a HUD
     // add saving best scores for each category
     // add a path behind you for each block traveled
@@ -98,9 +96,14 @@ public class MazeScreen implements Screen {
     private MyContactListener cl;
     private Goal goal;
 
+    private int mazeType;
+
     Array<Body> hitSensors;
-    public MazeScreen(MainGame myGame, int width, int height) {
+    public MazeScreen(MainGame myGame, int type, int width, int height) {
         game = myGame;
+
+        //save the type of maze so we know what to save when it is done
+        mazeType = type;
 
         //set up the block height and width
         blocksHigh = height;
@@ -156,6 +159,7 @@ public class MazeScreen implements Screen {
         //need a multiplexor so that the user can touch the level, or the user interface
         InputMultiplexer multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(new GestureDetector(new MyGestureListener()));
+        multiplexer.addProcessor(new MyInputProcessor());
         multiplexer.addProcessor(stage);
         Gdx.input.setInputProcessor(multiplexer);
 
@@ -425,42 +429,68 @@ public class MazeScreen implements Screen {
         accely = -Gdx.input.getAccelerometerX();
 
 
-        if(accelx >1) {
+        if((accelx >1)|| (MyInput.isDown(MyInput.MOVE_RIGHT))) {
             if(player.getBody().getLinearVelocity().x < player.PLAYER_MAX_SPEED) {
-                player.getBody().setLinearVelocity(
-                        player.getBody().getLinearVelocity().x + accelx *0.5f,
-                        player.getBody().getLinearVelocity().y);
-
+                if(accelx !=0) {
+                    player.getBody().setLinearVelocity(
+                            player.getBody().getLinearVelocity().x + accelx * 0.5f,
+                            player.getBody().getLinearVelocity().y);
+                }
+                else{
+                    player.getBody().setLinearVelocity(
+                            player.getBody().getLinearVelocity().x + player.FORWARD_FORCE * 0.5f,
+                            player.getBody().getLinearVelocity().y);
+                }
                 player.facingRight = true;
 
             }
         }
-        else if (accelx <-1) {
+        else if ((accelx <-1) || (MyInput.isDown(MyInput.MOVE_LEFT))){
             if(player.getBody().getLinearVelocity().x > -player.PLAYER_MAX_SPEED) {
-                player.getBody().setLinearVelocity(
-                        player.getBody().getLinearVelocity().x + accelx *0.5f,
-                        player.getBody().getLinearVelocity().y);
-
+                if(accelx!=0) {
+                    player.getBody().setLinearVelocity(
+                            player.getBody().getLinearVelocity().x + accelx * 0.5f,
+                            player.getBody().getLinearVelocity().y);
+                }
+                else{
+                    player.getBody().setLinearVelocity(
+                            player.getBody().getLinearVelocity().x - player.FORWARD_FORCE * 0.5f,
+                            player.getBody().getLinearVelocity().y);
+                }
                 player.facingRight = false;
             }
         }
 
-        if(accely >1) {
+        if((accely >1)|| (MyInput.isDown(MyInput.MOVE_UP))) {
             if(player.getBody().getLinearVelocity().y < player.PLAYER_MAX_SPEED) {
-                player.getBody().setLinearVelocity(
-                        player.getBody().getLinearVelocity().x ,
-                        player.getBody().getLinearVelocity().y+ accely *0.5f);
 
+                if(accely!=0) {
+                    player.getBody().setLinearVelocity(
+                            player.getBody().getLinearVelocity().x,
+                            player.getBody().getLinearVelocity().y + accely * 0.5f);
+                }
+                else{
+                    player.getBody().setLinearVelocity(
+                            player.getBody().getLinearVelocity().x,
+                            player.getBody().getLinearVelocity().y + player.FORWARD_FORCE * 0.5f);
+                }
                 player.facingRight = true;
 
             }
         }
-        else if (accely <-1) {
+        else if ((accely <-1)|| (MyInput.isDown(MyInput.MOVE_DOWN))) {
             if(player.getBody().getLinearVelocity().y > -player.PLAYER_MAX_SPEED) {
-                player.getBody().setLinearVelocity(
-                        player.getBody().getLinearVelocity().x,
-                        player.getBody().getLinearVelocity().y+ accely *0.5f);
 
+                if(accely !=0) {
+                    player.getBody().setLinearVelocity(
+                            player.getBody().getLinearVelocity().x,
+                            player.getBody().getLinearVelocity().y + accely * 0.5f);
+                }
+                else{
+                    player.getBody().setLinearVelocity(
+                            player.getBody().getLinearVelocity().x,
+                            player.getBody().getLinearVelocity().y - player.FORWARD_FORCE * 0.5f);
+                }
                 player.facingRight = false;
             }
         }
@@ -1115,7 +1145,47 @@ public class MazeScreen implements Screen {
     }
 
     private void goBackToMenu(){
+        //save the end of game
+        saveNumberOfGamesCompleted();
+
+        //run the victory animation, then return to the menu
         game.setScreen(new VictoryScreen(game));
+    }
+
+    //save the fact that the player solved the maze
+    void saveNumberOfGamesCompleted(){
+
+        //add one to the total number of games played
+        SaveManager saveManager = new SaveManager(false);
+        int numGamesPlayed = 0;
+        if(mazeType == game.EASY_MAZE_TYPE ){
+            if(saveManager.loadDataValue("numberOfEasyMazesSolved",Integer.class)!=null){
+                numGamesPlayed = saveManager.loadDataValue("numberOfEasyMazesSolved",Integer.class);
+            }
+            saveManager.saveDataValue("numberOfEasyMazesSolved",numGamesPlayed +1);
+
+        }
+        else if(mazeType == game.MEDIUM_MAZE_TYPE){
+            if(saveManager.loadDataValue("numberOfMediumMazesSolved",Integer.class)!=null){
+                numGamesPlayed = saveManager.loadDataValue("numberOfMediumMazesSolved",Integer.class);
+            }
+            saveManager.saveDataValue("numberOfMediumMazesSolved",numGamesPlayed +1);
+
+        }
+        else if(mazeType == game.HARD_MAZE_TYPE){
+            if(saveManager.loadDataValue("numberOfHardMazesSolved",Integer.class)!=null){
+                numGamesPlayed = saveManager.loadDataValue("numberOfHardMazesSolved",Integer.class);
+            }
+            saveManager.saveDataValue("numberOfHardMazesSolved",numGamesPlayed +1);
+
+        }
+        else if(mazeType == game.RIDICULOUS_MAZE_TYPE){
+            if(saveManager.loadDataValue("numberOfRidiculousMazesSolved",Integer.class)!=null){
+                numGamesPlayed = saveManager.loadDataValue("numberOfRidiculousMazesSolved",Integer.class);
+            }
+            saveManager.saveDataValue("numberOfRidiculousMazesSolved",numGamesPlayed +1);
+        }
+
     }
 
     private void pushCameraBackIntoLimits(){

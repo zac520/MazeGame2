@@ -17,6 +17,12 @@ import java.util.Random;
 public class MainGame extends Game {
     public int SCREEN_WIDTH = 480;
     public int SCREEN_HEIGHT = 360;
+
+    public int EASY_MAZE_TYPE = 0;
+    public int MEDIUM_MAZE_TYPE = 1;
+    public int HARD_MAZE_TYPE = 2;
+    public int RIDICULOUS_MAZE_TYPE = 3;
+
     public Random rand;
     /** shared textures **/
     public TextureAtlas atlas;

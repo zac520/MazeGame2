@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
+import nzgames.mazegame.Handlers.SaveManager;
 import nzgames.mazegame.MainGame;
 
 /**
@@ -29,6 +30,7 @@ public class MenuScreen implements Screen {
     SpriteBatch batch;
     Skin skin;
 
+
     private int blocksWide;
     private int blocksHigh;
     private float heightToWidthRatio;
@@ -42,6 +44,13 @@ public class MenuScreen implements Screen {
     private final int MEDIUM_MAZE_WIDTH = 40;
     private final int HARD_MAZE_WIDTH = 64;
     private final int RIDICULOUS_MAZE_WIDTH = 128;
+
+
+
+    private int numberEasyMazesSolved = 0;
+    private int numberMediumMazesSolved = 0;
+    private int numberHardMazesSolved = 0;
+    private int numberRidiculousMazesSolved = 0;
 
     public MenuScreen(MainGame pGame) {
 
@@ -65,6 +74,10 @@ public class MenuScreen implements Screen {
         if(availableSquareSizes.size<4){
             perfectSquares = false; //the screen ratio will not support perfect squares. use rectangles.
         }
+
+
+        //load the saved data (how many of each maze has been solved)
+        loadData();
 
         //initialize camera
         camera = new OrthographicCamera();
@@ -92,7 +105,7 @@ public class MenuScreen implements Screen {
                 blocksWide = getNearestSquareFitWidth(EASY_MAZE_WIDTH);
                 blocksHigh = getNearestSquareFitHeight(blocksWide);
 
-                game.setScreen(new MazeScreen(game,blocksWide,blocksHigh));
+                game.setScreen(new MazeScreen(game,game.EASY_MAZE_TYPE,blocksWide,blocksHigh));
             }
         });
         table.add(easyMaze).width(200).height(50);
@@ -107,7 +120,7 @@ public class MenuScreen implements Screen {
                 blocksWide = getNearestSquareFitWidth(MEDIUM_MAZE_WIDTH);
                 blocksHigh = getNearestSquareFitHeight(blocksWide);
 
-                game.setScreen(new MazeScreen(game,blocksWide,blocksHigh));
+                game.setScreen(new MazeScreen(game,game.MEDIUM_MAZE_TYPE,blocksWide,blocksHigh));
             }
         });
         table.add(mediumMaze).width(200).height(50);
@@ -122,7 +135,7 @@ public class MenuScreen implements Screen {
                 blocksWide = getNearestSquareFitWidth(HARD_MAZE_WIDTH);
                 blocksHigh = getNearestSquareFitHeight(blocksWide);
 
-                game.setScreen(new MazeScreen(game,blocksWide,blocksHigh));
+                game.setScreen(new MazeScreen(game,game.HARD_MAZE_TYPE,blocksWide,blocksHigh));
             }
         });
         table.add(hardMaze).width(200).height(50);
@@ -138,7 +151,7 @@ public class MenuScreen implements Screen {
                 blocksWide = getNearestSquareFitWidth(RIDICULOUS_MAZE_WIDTH);
                 blocksHigh = getNearestSquareFitHeight(blocksWide);
 
-                game.setScreen(new MazeScreen(game,blocksWide,blocksHigh));
+                game.setScreen(new MazeScreen(game,game.RIDICULOUS_MAZE_TYPE,blocksWide,blocksHigh));
             }
         });
         table.add(ridiculousMaze).width(200).height(50);
@@ -158,7 +171,11 @@ public class MenuScreen implements Screen {
 
         //show frames per second
         batch.begin();
-        //font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond(), 20, game.SCREEN_HEIGHT -30);
+        font.draw(batch, "Number of Easy Mazes Solved: " + numberEasyMazesSolved, 20, game.SCREEN_HEIGHT -30);
+        font.draw(batch, "Number of Medium Mazes Solved: " + numberMediumMazesSolved, 20, game.SCREEN_HEIGHT -50);
+        font.draw(batch, "Number of Hard Mazes Solved: " + numberHardMazesSolved, 20, game.SCREEN_HEIGHT -70);
+        font.draw(batch, "Number of Ridiculous Mazes Solved: " + numberRidiculousMazesSolved, 20, game.SCREEN_HEIGHT -90);
+
         batch.end();
 
         stage.act();
@@ -246,7 +263,24 @@ public class MenuScreen implements Screen {
         }
         return closestFit;
     }
+    private void loadData() {
+        //get the number of games played
+        SaveManager saveManager = new SaveManager(false);
 
+        if (saveManager.loadDataValue("numberOfEasyMazesSolved", Integer.class) != null) {
+            numberEasyMazesSolved = saveManager.loadDataValue("numberOfEasyMazesSolved", Integer.class);
+        }
+        if (saveManager.loadDataValue("numberOfMediumMazesSolved", Integer.class) != null) {
+            numberMediumMazesSolved = saveManager.loadDataValue("numberOfMediumMazesSolved", Integer.class);
+        }
+        if (saveManager.loadDataValue("numberOfHardMazesSolved", Integer.class) != null) {
+            numberHardMazesSolved = saveManager.loadDataValue("numberOfHardMazesSolved", Integer.class);
+        }
+        if (saveManager.loadDataValue("numberOfRidiculousMazesSolved", Integer.class) != null) {
+            numberRidiculousMazesSolved = saveManager.loadDataValue("numberOfRidiculousMazesSolved", Integer.class);
+        }
+
+    }
     @Override
     public void resize(int width, int height) {
 
