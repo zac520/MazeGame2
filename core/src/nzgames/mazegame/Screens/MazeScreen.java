@@ -1299,19 +1299,15 @@ public class MazeScreen implements Screen {
 
     private void goBackToMenu(){
 
-        score = (int) (100 * longestDistance/playTime);
+        //easy maze is * 1, medium is  * 2, hard is * 4, and ridiculous is * 8
+        score = (int) (100 * longestDistance/playTime) * mazeType;
         System.out.println(score);
 
         //save the end of game
         saveNumberOfGamesCompleted();
 
         //reset all of our shared variables
-        game.box2DRenderer = new Box2DDebugRenderer();
-        game.stage = new Stage();
-        game.batch = new SpriteBatch();
-        game.font = new BitmapFont();
-        game.myInputProcessor = new MyInputProcessor();
-        game.loadingProgress = new String();
+        game.resetSharedVariables();
 
 
 

@@ -2,6 +2,7 @@ package nzgames.mazegame.Screens;
 
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetDescriptor;
 import com.badlogic.gdx.assets.AssetManager;
@@ -16,6 +17,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.Align;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.async.AsyncExecutor;
@@ -89,6 +91,7 @@ public class MenuScreen implements Screen {
     private int textRowHeight;
     private int buttonSize;
 
+    Skin popupSkin;
     public MenuScreen(MainGame pGame) {
 
         game = pGame;
@@ -129,9 +132,14 @@ public class MenuScreen implements Screen {
         stage.getViewport().setCamera(camera);
 
         skin = game.skin;
-        font = new BitmapFont();
-        System.out.println(Gdx.graphics.getDensity());
-        font.scale(Gdx.graphics.getDensity()/2);
+        font = game.font;
+        //font.scale(Gdx.graphics.getDensity());
+        //font.getData().xHeight;
+        //System.out.println(font.getData().lineHeight);
+        //System.out.println(font.getScaleX());
+
+        //setup the skin for the popup
+        popupSkin = new Skin(Gdx.files.internal("assets/userinterface/defaultskin.json"));
 
         //set the background
         background = new TextureRegion(game.atlas.findRegion("MenuBackground"));
@@ -149,152 +157,146 @@ public class MenuScreen implements Screen {
         // give input to the stage
         Gdx.input.setInputProcessor(stage);
     }
-    private float getTextScaling(int pixelsPerTextLine){
-        float currentFontSize = 12;
-        float ratio = pixelsPerTextLine/currentFontSize;
-        return ratio ;
 
-    }
     private void createButtons(){
+
         //make table for all the buttons
         Table table=new Table();
-        table.setSize(game.SCREEN_WIDTH,game.SCREEN_HEIGHT);
-        table.padTop(game.SCREEN_HEIGHT/3);
+        table.setSize(game.SCREEN_WIDTH,(game.SCREEN_HEIGHT/3)*2);
+        //table.padTop(game.SCREEN_HEIGHT/3);
 
-        //add Easy mode button
-        textButtonStyle = new TextButton.TextButtonStyle();
-        textButtonStyle.font = font;
-        textButtonStyle.up = skin.getDrawable("WhiteButtonUpEasy");
-        textButtonStyle.down = skin.getDrawable("WhiteButtonDownEasy");
-        Button easyButton = new Button(textButtonStyle);
-        stage.addActor(easyButton);
-
-        easyButton.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                //set screen
-//                blocksWide = getNearestNumberInArray(availableSquareSizes,20);
-//                blocksHigh = (int) (blocksWide * heightToWidthRatio);
-                blocksWide = getNearestSquareFitWidth(EASY_MAZE_WIDTH);
-                blocksHigh = getNearestSquareFitHeight(blocksWide);
-                autoModeTimer = new Timer();
-                autoModeTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        //Your code goes Here
-                        game.setScreen(new MazeScreen(game,game.EASY_MAZE_TYPE,blocksWide,blocksHigh));
-
-                    }
-                }, 0);
-                //game.setScreen(new MazeScreen(game,game.EASY_MAZE_TYPE,blocksWide,blocksHigh));
-
-            }
-        });
+        //add Easy mode button (always unlocked)
+        Button easyButton = createSingleButton("WhiteButtonUpEasy", "WhiteButtonDownEasy", EASY_MAZE_WIDTH, game.EASY_MAZE_TYPE);
         table.add(easyButton).width(buttonSize).height(buttonSize).padTop(30).padRight(100);
-        //table.row();
 
-        //add Easy mode button
-        textButtonStyle = new TextButton.TextButtonStyle();
-        textButtonStyle.font = font;
-        textButtonStyle.up = skin.getDrawable("WhiteButtonUpMedium");
-        textButtonStyle.down = skin.getDrawable("WhiteButtonDownMedium");
-        Button mediumButton = new Button(textButtonStyle);
-        stage.addActor(mediumButton);
 
-        mediumButton.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                //set screen
-                blocksWide = getNearestSquareFitWidth(MEDIUM_MAZE_WIDTH);
-                blocksHigh = getNearestSquareFitHeight(blocksWide);
-
-                autoModeTimer = new Timer();
-                autoModeTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        //Your code goes Here
-                        game.setScreen(new MazeScreen(game,game.MEDIUM_MAZE_TYPE,blocksWide,blocksHigh));
-
-                    }
-                }, 0);
-
-                //game.setScreen(new MazeScreen(game,game.MEDIUM_MAZE_TYPE,blocksWide,blocksHigh));
-            }
-        });
+        //add Medium mode button
+        Button mediumButton = createSingleButton("WhiteButtonUpMedium", "WhiteButtonDownMedium", MEDIUM_MAZE_WIDTH, game.MEDIUM_MAZE_TYPE);
         table.add(mediumButton).width(buttonSize).height(buttonSize).padTop(30);
+
+        //lock the button if it is not yet unlocked
+        if(numberEasyMazesSolved < MIN_EASY_GAMES_FOR_MEDIUM){
+            lockButton(mediumButton,"Complete " + (MIN_EASY_GAMES_FOR_MEDIUM - numberEasyMazesSolved) + " more easy mazes to unlock!");
+        }
         table.row();
 
-        //add Easy mode button
-        textButtonStyle = new TextButton.TextButtonStyle();
-        textButtonStyle.font = font;
-        textButtonStyle.up = skin.getDrawable("WhiteButtonUpHard");
-        textButtonStyle.down = skin.getDrawable("WhiteButtonDownHard");
-        Button hardButton = new Button(textButtonStyle);
-        stage.addActor(hardButton);
 
-        hardButton.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                blocksWide = getNearestSquareFitWidth(HARD_MAZE_WIDTH);
-                blocksHigh = getNearestSquareFitHeight(blocksWide);
-
-                autoModeTimer = new Timer();
-                autoModeTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        //Your code goes Here
-                        game.setScreen(new MazeScreen(game,game.HARD_MAZE_TYPE,blocksWide,blocksHigh));
-
-                    }
-                }, 0);
-
-                //game.setScreen(new MazeScreen(game,game.HARD_MAZE_TYPE,blocksWide,blocksHigh));
-
-            }
-        });
+        //add hard mode button
+        Button hardButton = createSingleButton("WhiteButtonUpHard", "WhiteButtonDownHard", HARD_MAZE_WIDTH, game.HARD_MAZE_TYPE);
         table.add(hardButton).width(buttonSize).height(buttonSize).padTop(30).padRight(100);
-        //table.row();
+
+        //lock the button if it is not yet unlocked
+        if(numberMediumMazesSolved < MIN_MEDIUM_GAMES_FOR_HARD){
+            lockButton(hardButton,"Complete " + (MIN_MEDIUM_GAMES_FOR_HARD - numberMediumMazesSolved) + " more medium mazes to unlock!");
+        }
 
 
-        //add Easy mode button
-        textButtonStyle = new TextButton.TextButtonStyle();
-        textButtonStyle.font = font;
-        textButtonStyle.up = skin.getDrawable("WhiteButtonUpRidiculous");
-        textButtonStyle.down = skin.getDrawable("WhiteButtonDownRidiculous");
-        Button ridiculousButton = new Button(textButtonStyle);
-        stage.addActor(ridiculousButton);
-
-        ridiculousButton.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                blocksWide = getNearestSquareFitWidth(RIDICULOUS_MAZE_WIDTH);
-                blocksHigh = getNearestSquareFitHeight(blocksWide);
-
-                autoModeTimer = new Timer();
-                autoModeTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        //Your code goes Here
-                        game.setScreen(new MazeScreen(game,game.RIDICULOUS_MAZE_TYPE,blocksWide,blocksHigh));
-
-                    }
-                }, 0);
-
-                //game.setScreen(new MazeScreen(game,game.RIDICULOUS_MAZE_TYPE,blocksWide,blocksHigh));
-
-            }
-        });
+        //add ridiculous mode button
+        Button ridiculousButton = createSingleButton("WhiteButtonUpRidiculous", "WhiteButtonDownRidiculous", RIDICULOUS_MAZE_WIDTH, game.RIDICULOUS_MAZE_TYPE);
         table.add(ridiculousButton).width(buttonSize).height(buttonSize).padTop(30);
-        //table.row();
 
+        //lock the button if it is not yet unlocked
+        if(numberHardMazesSolved < MIN_HARD_GAMES_FOR_RIDICULOUS){
+            lockButton(ridiculousButton,"Complete " + (MIN_HARD_GAMES_FOR_RIDICULOUS - numberHardMazesSolved) + " more hard mazes to unlock!");
+        }
 
 
         //add table to the stage
         stage.addActor(table);
     }
 
-    private void createSingleButton(){
-        
+    private void lockButton(Button button, String popupMessage){
+        final String message = popupMessage;
+        TextureRegion locked = new TextureRegion(game.atlas.findRegion("Lock"));
+        Image lockedImage = new Image(locked);
+        lockedImage.setSize(buttonSize/2, buttonSize/2);
+        lockedImage.setCenterPosition(
+                button.getX() + button.getWidth()/2,
+                button.getY() + button.getHeight()/2
+        );
+        button.addActor(lockedImage);
+        button.clearListeners();
+        button.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                addLockedDialog(message);
+
+            }
+        });
+    }
+
+    /**
+     * This class creates a single button that just sets the new screen on a separate thread.
+     * @param buttonUpName is a string for the button found in game.atlas
+     * @param buttonDownName is a string for the depressed button found in game.atlas
+     * @param width is the width in blocks for the maze
+     * @param gameType is the type of maze this button leads to ie. game.HARD_MAZE_TYPE
+     * @return
+     */
+    private Button createSingleButton(String buttonUpName, String buttonDownName, int width, int gameType){
+        textButtonStyle = new TextButton.TextButtonStyle();
+        textButtonStyle.font = font;
+        textButtonStyle.up = skin.getDrawable(buttonUpName);
+        textButtonStyle.down = skin.getDrawable(buttonDownName);
+        Button button = new Button(textButtonStyle);
+        button.setSize(buttonSize,buttonSize);
+        stage.addActor(button);
+        final int gameWidth = width;
+        final int gamePlayType = gameType;
+
+        button.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+
+                blocksWide = getNearestSquareFitWidth(gameWidth);
+                blocksHigh = getNearestSquareFitHeight(blocksWide);
+
+                //need to set the screen on a new thread, so the game doesn't freeze while we load it. This is how
+                autoModeTimer = new Timer();
+                autoModeTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        //Your code goes Here
+                        game.setScreen(new MazeScreen(game,gamePlayType,blocksWide,blocksHigh));
+
+                    }
+                }, 0);
+
+            }
+        });
+
+        return button;
+    }
+
+    /**
+     * This class creates the popup.
+     */
+    void addLockedDialog(String message){
+
+        Label label = new Label(message, popupSkin);
+        label.setWrap(true);
+        label.setFontScale(font.getScaleX());
+        label.setAlignment(Align.center);
+
+        Dialog dialog = new Dialog("", popupSkin, "dialog") {
+            protected void result (Object object) {
+                System.out.println("Chosen: " + object);
+            }
+        };
+        dialog.padTop(50).padBottom(50);
+        dialog.getContentTable().add(label).width(game.SCREEN_WIDTH/2).row();
+        dialog.getButtonTable().padTop(5);
+
+        TextButton dbutton = new TextButton("Okay", popupSkin,"default");
+        dbutton.getLabel().setFontScale(font.getScaleX()*4);
+        dialog.button(dbutton, true);
+        //dbutton = new TextButton("No", popupSkin, "dialog");
+        dialog.button(dbutton, false);
+        dialog.key(Input.Keys.ENTER, true).key(Input.Keys.ESCAPE, false);
+        dialog.invalidateHierarchy();
+        dialog.invalidate();
+        dialog.layout();
+        dialog.show(stage);
     }
 
     private void createOldMenu(){

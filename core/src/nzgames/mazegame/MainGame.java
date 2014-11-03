@@ -28,10 +28,10 @@ public class MainGame extends Game {
     public int SCREEN_WIDTH = 360;
     public int SCREEN_HEIGHT = 480;
 
-    public int EASY_MAZE_TYPE = 0;
-    public int MEDIUM_MAZE_TYPE = 1;
-    public int HARD_MAZE_TYPE = 2;
-    public int RIDICULOUS_MAZE_TYPE = 3;
+    public int EASY_MAZE_TYPE = 1;
+    public int MEDIUM_MAZE_TYPE = 2;
+    public int HARD_MAZE_TYPE = 4;
+    public int RIDICULOUS_MAZE_TYPE = 8;
 
     public Random rand;
     /** shared textures **/
@@ -46,7 +46,7 @@ public class MainGame extends Game {
     public MyInputProcessor myInputProcessor;
     public String loadingProgress;
     public int loadingProgressPercent = -1;
-
+    public int textRowHeight;
     @Override
     public void create () {
 
@@ -58,15 +58,7 @@ public class MainGame extends Game {
         atlas = new TextureAtlas(Gdx.files.internal("assets/graphics/Maze.txt"));
 
         //start up all of the shared variables (needed for async loading)
-        box2DRenderer = new Box2DDebugRenderer();
-        stage = new Stage();
-        batch = new SpriteBatch();
-        font = new BitmapFont();
-        myInputProcessor = new MyInputProcessor();
-        loadingProgress = new String();
-        //set up our own skin to make on the fly
-        skin = new Skin();
-        skin.addRegions(atlas);
+        resetSharedVariables();
 
         //seed the randomizer
         rand = new Random();//seed this for any variable thing to use later
@@ -75,13 +67,38 @@ public class MainGame extends Game {
 
         //need to learn about filters. For now, this allows me to add two actors side by side without a feathering effect between them
         //(makes it seamless)
-        Texture myTexture = atlas.getTextures().first();
-        myTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+//        Texture myTexture = atlas.getTextures().first();
+//        myTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
 
-        //setScreen(new MenuScreen(this));
-        setScreen(new VictoryScreen(this, 100, 100, true));
+        setScreen(new MenuScreen(this));
+        //setScreen(new VictoryScreen(this, 100, 100, true));
     }
+    //set up shared variables
+    public void resetSharedVariables(){
+        box2DRenderer = new Box2DDebugRenderer();
+        stage = new Stage();
+        batch = new SpriteBatch();
+        //font = new BitmapFont();
+        font = new BitmapFont(Gdx.files.internal("assets/userinterface/Source_Sans_Pro.fnt"));
+        textRowHeight = Gdx.graphics.getHeight() / 40;
+        font.setScale(getTextScaling(textRowHeight));
+        myInputProcessor = new MyInputProcessor();
+        loadingProgress = new String();
+        //set up our own skin to make on the fly
+        skin = new Skin();
+        skin.addRegions(atlas);
+    }
+    private float getTextScaling(int pixelsPerTextLine){
 
+        //get the line height of our font
+        float currentFontSize = font.getData().lineHeight;
+
+        //compare to the line height we want
+        float ratio = pixelsPerTextLine/currentFontSize;
+
+        return ratio;
+
+    }
 
 }

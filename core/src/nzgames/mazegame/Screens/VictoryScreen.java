@@ -67,8 +67,7 @@ public class VictoryScreen implements Screen {
 
         //create font
         //font = new BitmapFont(Gdx.files.internal("assets/ui/test.fnt"), false);
-        font = new BitmapFont();
-        font.scale(Gdx.graphics.getDensity());
+        font = game.font;
 
         // create viewport
         camera=new OrthographicCamera();
@@ -118,7 +117,17 @@ public class VictoryScreen implements Screen {
         }
 
     }
+    private float getTextScaling(int pixelsPerTextLine){
 
+        //get the line height of our font
+        float currentFontSize = font.getData().lineHeight;
+
+        //compare to the line height we want
+        float ratio = pixelsPerTextLine/currentFontSize;
+
+        return ratio;
+
+    }
     @Override
     public void render(float delta) {
         // clear the screen
