@@ -108,7 +108,7 @@ public class MazeScreen implements Screen {
     private int mazeType;
 
     Actor [][] playerPath;
-
+    private int score;
     /**box2d variables**/
     private float accum = 0f;
     private final float step = 1f / 80f;
@@ -121,6 +121,9 @@ public class MazeScreen implements Screen {
 
     private int xBlockValue;
     private int yBlockValue;
+
+    private boolean newRecord = true;
+
     public MazeScreen(MainGame myGame, int type, int width, int height) {
         game = myGame;
 
@@ -189,7 +192,7 @@ public class MazeScreen implements Screen {
         drawBorder();
 
         //create a circle at the starting point
-        createPlayer(0, 0);
+        createPlayer(0, blocksHigh-1);
 
 
         //need a multiplexor so that the user can touch the level, or the user interface
@@ -241,8 +244,8 @@ public class MazeScreen implements Screen {
         totalSquaresToVisit = blocksHigh * blocksWide;
 
         //put us at position 0,0, and mark that square as visited
-        Vector2 currentPosition = new Vector2(0, 0);
-        visitedSquares[0][0] = 1;
+        Vector2 currentPosition = new Vector2(0, blocksHigh-1);
+        //visitedSquares[0][blocksHigh-1] = 1;
 
         positionStack = new Array<Vector2>();
         int nextSquareDirection;
@@ -448,7 +451,8 @@ public class MazeScreen implements Screen {
                 lineWidth<lineHeight ? (lineWidth)/Box2DVars.PPM : (lineHeight)/Box2DVars.PPM  ,
                 lineWidth<lineHeight ? (lineWidth)/Box2DVars.PPM  : (lineHeight)/Box2DVars.PPM );
         stage.addActor(goal.getGroup());
-
+        //move the tile to the back so we don't draw on top of player
+        stage.getActors().get(stage.getActors().size -1).toBack();
 
     }
 
@@ -497,8 +501,8 @@ public class MazeScreen implements Screen {
 
 
         //get the accelerometer input
-        accelx = Gdx.input.getAccelerometerY();
-        accely = -Gdx.input.getAccelerometerX();
+        accelx = -Gdx.input.getAccelerometerX();
+        accely = -Gdx.input.getAccelerometerY();
 
 
         if((accelx >1)|| (MyInput.isDown(MyInput.MOVE_RIGHT))) {
@@ -567,6 +571,15 @@ public class MazeScreen implements Screen {
             }
         }
 
+        //determine if moving or not
+        if((Math.abs(player.getBody().getLinearVelocity().x) >1) ||(Math.abs(player.getBody().getLinearVelocity().y) >1) ){
+            player.isMoving = true;
+        }
+        else{
+            player.isMoving =false;
+        }
+
+
         //reposition player based on input
         //player.getBody().applyForceToCenter(accelx,accely,true);
 
@@ -575,13 +588,13 @@ public class MazeScreen implements Screen {
         accum += delta;
         accum = Math.min(accum, maxAccum);
         while (accum > step) {
-            world.step(step,60,10);
+            world.step(step, 60, 10);
             accum -= step;
 
             //run a path behind the player
             updatePlayerPath();
         }
-        world.step(accum,60,10);
+        world.step(accum, 60, 10);
         accum = 0;
         //world.step(delta,6,3);
 
@@ -663,13 +676,19 @@ public class MazeScreen implements Screen {
 
             //create an image in the appropriate spot and add it to the stage
             //TextureRegion myTextureRegion = game.atlas.findRegion("Wall");
-            Image pathMarkerImage = new Image(horizontalMazeWall);
-            pathMarkerImage.setSize(lineWidth ,lineHeight);
+            Image pathMarkerImage = new Image(new TextureRegion(game.atlas.findRegion("Tracks")));
+            pathMarkerImage.setSize(lineWidth *0.9f ,lineHeight*0.9f);
             pathMarkerImage.setPosition(
                     xBlockValue * lineWidth,
                     yBlockValue * lineHeight
             );
-            pathMarkerImage.setColor(Color.YELLOW);
+            //pathMarkerImage.setColor(Color.CYAN);
+            //set the origin so we can rotate by the center
+            pathMarkerImage.setOrigin(pathMarkerImage.getWidth()/2, pathMarkerImage.getHeight()/2);
+
+            //rotate to the angle the player is facing
+            pathMarkerImage.setRotation(calculateAngleWeAreMoving()-90);
+
             stage.addActor(pathMarkerImage);
             //move the tile to the back so we don't draw on top of player
             stage.getActors().get(stage.getActors().size -1).toBack();
@@ -951,9 +970,13 @@ public class MazeScreen implements Screen {
     }
 
     private void createPlayer(int xPosition, int yPosition){
+
+        xPosition *= lineWidth;
+        yPosition *= lineHeight;
+
         //define body
         BodyDef bdef = new BodyDef();
-        bdef.position.set(xPosition + lineWidth/2 /Box2DVars.PPM, yPosition+lineHeight/2 / Box2DVars.PPM);
+        bdef.position.set((xPosition + lineWidth/2) / Box2DVars.PPM,  (yPosition+lineHeight/2) /Box2DVars.PPM);
         bdef.type = BodyDef.BodyType.DynamicBody;
 
         //create body
@@ -1275,6 +1298,10 @@ public class MazeScreen implements Screen {
     }
 
     private void goBackToMenu(){
+
+        score = (int) (100 * longestDistance/playTime);
+        System.out.println(score);
+
         //save the end of game
         saveNumberOfGamesCompleted();
 
@@ -1287,10 +1314,49 @@ public class MazeScreen implements Screen {
         game.loadingProgress = new String();
 
 
-        //run the victory animation, then return to the menu
-        game.setScreen(new VictoryScreen(game));
-    }
 
+        //run the victory animation, then return to the menu
+        game.setScreen(new VictoryScreen(game, playTime, score, newRecord));
+    }
+    //moving directly to the right is zero degrees
+    private float calculateAngleWeAreMoving(){
+
+
+
+        //body is moving predominantly left or right
+        if (Math.abs(player.getBody().getLinearVelocity().x) > Math.abs(player.getBody().getLinearVelocity().y)){
+            if(player.getBody().getLinearVelocity().x > 0){
+                return 0;
+            }
+            else{
+                return 180;
+            }
+        }
+
+        else{
+            if(player.getBody().getLinearVelocity().y>0){
+                return 90;
+            }
+            else{
+                return 270;
+            }
+        }
+
+//        //http://stackoverflow.com/questions/22421054/determine-movement-vectors-direction-from-velocity
+//
+//        float addDeg = 0;
+//        if(body.getLinearVelocity().x<0) {
+//            addDeg = body.getLinearVelocity().y > 0 ? 180 : 270;
+//        }
+//        else if(body.getLinearVelocity().y<=0){
+//            addDeg = 360;
+//        }
+//
+//        return ((float)Math.abs(
+//                Math.abs(
+//                        Math.atan(
+//                                body.getLinearVelocity().y/body.getLinearVelocity().x)*180/Math.PI)-addDeg));
+    }
     //save the fact that the player solved the maze
     void saveNumberOfGamesCompleted(){
 
@@ -1298,6 +1364,10 @@ public class MazeScreen implements Screen {
         SaveManager saveManager = new SaveManager(game.saveEncrypted);
         int numGamesPlayed = 0;
         float bestTime = playTime;
+
+        int bestScore = score;
+
+
 
         if(mazeType == game.EASY_MAZE_TYPE ){
             //check if we have any previous data to add to
@@ -1309,9 +1379,21 @@ public class MazeScreen implements Screen {
                 if(bestTime > (Float) saveManager.loadDataValue("bestEasyTime",Float.class)) {
                     bestTime = saveManager.loadDataValue("bestEasyTime", Float.class);
                 }
+
+            }
+            //check against previous score
+            if(saveManager.loadDataValue("bestEasyScore",Integer.class)!=null){
+                if(score > (Integer) saveManager.loadDataValue("bestEasyScore",Integer.class)) {
+                    bestScore = score;
+                }
+                else{
+                    bestScore = saveManager.loadDataValue("bestEasyScore", Integer.class);
+                    newRecord = false;
+                }
             }
 
             //actually save the data
+            saveManager.saveDataValue("bestEasyScore",bestScore);
             saveManager.saveDataValue("numberOfEasyMazesSolved",numGamesPlayed +1);
             saveManager.saveDataValue("bestEasyTime",bestTime);
 
@@ -1326,8 +1408,23 @@ public class MazeScreen implements Screen {
                 if(bestTime > (Float) saveManager.loadDataValue("bestMediumTime",Float.class)) {
                     bestTime = saveManager.loadDataValue("bestMediumTime", Float.class);
                 }
+
+            }
+            //check against previous score
+            if(saveManager.loadDataValue("bestMediumScore",Integer.class)!=null){
+                if(score > (Integer) saveManager.loadDataValue("bestMediumScore",Integer.class)) {
+                    newRecord = true;
+                    bestScore = score;
+                }
+                else{
+                    bestScore = saveManager.loadDataValue("bestMediumScore", Integer.class);
+                    newRecord = false;
+
+                }
             }
 
+            //actually save the data
+            saveManager.saveDataValue("bestMediumScore",bestScore);
             saveManager.saveDataValue("numberOfMediumMazesSolved",numGamesPlayed +1);
             saveManager.saveDataValue("bestMediumTime",bestTime);
 
@@ -1342,8 +1439,23 @@ public class MazeScreen implements Screen {
                 if(bestTime > (Float) saveManager.loadDataValue("bestHardTime",Float.class)) {
                     bestTime = saveManager.loadDataValue("bestHardTime", Float.class);
                 }
+
+            }
+            //check against previous score
+            if(saveManager.loadDataValue("bestHardScore",Integer.class)!=null){
+                if(score > (Integer) saveManager.loadDataValue("bestHardScore",Integer.class)) {
+                    newRecord = true;
+                    bestScore = score;
+                }
+                else{
+                    bestScore = saveManager.loadDataValue("bestHardScore", Integer.class);
+                    newRecord = false;
+
+                }
             }
 
+            //actually save the data
+            saveManager.saveDataValue("bestHardScore",bestScore);
             saveManager.saveDataValue("numberOfHardMazesSolved",numGamesPlayed +1);
             saveManager.saveDataValue("bestHardTime",bestTime);
 
@@ -1359,7 +1471,23 @@ public class MazeScreen implements Screen {
                 if(bestTime > (Float) saveManager.loadDataValue("bestRidiculousTime",Float.class)) {
                     bestTime = saveManager.loadDataValue("bestRidiculousTime", Float.class);
                 }
+
             }
+            //check against previous score
+            if(saveManager.loadDataValue("bestRidiculousScore",Integer.class)!=null){
+                if(score > (Integer) saveManager.loadDataValue("bestRidiculousScore",Integer.class)) {
+                    newRecord = true;
+                    bestScore = score;
+                }
+                else{
+                    bestScore = saveManager.loadDataValue("bestRidiculousScore", Integer.class);
+                    newRecord = false;
+
+                }
+            }
+
+            //actually save the data
+            saveManager.saveDataValue("bestRidiculousScore",bestScore);
             saveManager.saveDataValue("numberOfRidiculousMazesSolved",numGamesPlayed +1);
             saveManager.saveDataValue("bestRidiculousTime",bestTime);
 

@@ -35,7 +35,7 @@ public class Goal extends GenericActor {
         this.FORWARD_FORCE =  FORWARD_FORCE * (int) this.body.getMass();
 
         //load the animations
-        leftAnimation = new Animation(RUNNING_FRAME_DURATION, game.atlas.findRegions("CookedbaconX"));
+        leftAnimation = new Animation(RUNNING_FRAME_DURATION, game.atlas.findRegions("Cheese"));
 
         //set the current drawable to the animation
         myDrawable = new TextureRegionDrawable(leftAnimation.getKeyFrame(this.getStateTime(), true));
@@ -46,9 +46,9 @@ public class Goal extends GenericActor {
         //add this class to a graphics group so that we can append to it later
         graphicsGroup = new Group();
         graphicsGroup.addActor(this);
-        graphicsGroup.setCenterPosition(
-                body.getPosition().x * Box2DVars.PPM,
-                body.getPosition().y * Box2DVars.PPM);
+        graphicsGroup.setPosition(
+                body.getPosition().x * Box2DVars.PPM - (worldWidth / 2),
+                body.getPosition().y * Box2DVars.PPM - (worldHeight / 2));
 
     }
     public void update(float delta) {
@@ -64,7 +64,12 @@ public class Goal extends GenericActor {
         //update the time for this class
         this.update(delta);
 
-
+        if((Math.abs(body.getLinearVelocity().x) >10) ||(Math.abs(body.getLinearVelocity().y) >10) ){
+            isMoving = true;
+        }
+        else{
+            isMoving =false;
+        }
 
         if (isMoving) {
             myDrawable.setRegion(facingRight ? leftAnimation.getKeyFrame(getStateTime(), true) : leftAnimation.getKeyFrame(getStateTime(), true));
@@ -75,9 +80,9 @@ public class Goal extends GenericActor {
         this.setDrawable(myDrawable);
 
         //update the image position to match the box2d position
-        graphicsGroup.setPosition(
-                body.getPosition().x * Box2DVars.PPM - (worldWidth / 2),
-                body.getPosition().y * Box2DVars.PPM - (worldHeight / 2));
+//        graphicsGroup.setCenterPosition(
+//                body.getPosition().x * Box2DVars.PPM - (worldWidth / 2),
+//                body.getPosition().y * Box2DVars.PPM - (worldHeight / 2));
 
 
 

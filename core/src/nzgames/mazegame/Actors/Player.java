@@ -25,7 +25,7 @@ public class Player extends GenericActor {
 
     public static  int PLAYER_MAX_SPEED = 2000;
     public int FORWARD_FORCE = 1;//will be reset based on player weight
-    public static  float RUNNING_FRAME_DURATION = 0.2f;
+    public static  float RUNNING_FRAME_DURATION = 0.15f;
 
     private Animation swordSlashAnimationRight;
     private Animation swordSlashAnimationLeft;
@@ -53,20 +53,23 @@ public class Player extends GenericActor {
         this.FORWARD_FORCE =  FORWARD_FORCE * (int) this.body.getMass();
 
         //load the animations
-        leftAnimation = new Animation(RUNNING_FRAME_DURATION, game.atlas.findRegions("Blueberrymuffin"));
+        leftAnimation = new Animation(RUNNING_FRAME_DURATION, game.atlas.findRegions("Mouse"));
 
         //set the current drawable to the animation
         myDrawable = new TextureRegionDrawable(leftAnimation.getKeyFrame(this.getStateTime(), true));
 
         //get the size to match the body
         this.setSize(worldWidth, worldHeight);
+        //set the origin so we can rotate by the center
+        this.setOrigin(this.getWidth()/2, this.getHeight()/2);
+
 
         //add this class to a graphics group so that we can append to it later
         graphicsGroup = new Group();
         graphicsGroup.addActor(this);
         graphicsGroup.setCenterPosition(
-                body.getPosition().x * Box2DVars.PPM ,
-                body.getPosition().y * Box2DVars.PPM );
+                body.getPosition().x * Box2DVars.PPM,
+                body.getPosition().y * Box2DVars.PPM);
 
     }
     public void update(float delta) {
@@ -97,8 +100,53 @@ public class Player extends GenericActor {
                 body.getPosition().x * Box2DVars.PPM - (worldWidth / 2),
                 body.getPosition().y * Box2DVars.PPM - (worldHeight / 2));
 
+        //update the rotation
+        if(calculateAngleWeAreMoving()>=0){
+            //System.out.println(calculateAngleWeAreMoving());
+            this.setRotation(calculateAngleWeAreMoving()-90);
+
+        }
+
+    }
+
+    //moving directly to the right is zero degrees
+    private float calculateAngleWeAreMoving(){
 
 
+
+        //body is moving predominantly left or right
+        if (Math.abs(body.getLinearVelocity().x) > Math.abs(body.getLinearVelocity().y)){
+            if(body.getLinearVelocity().x > 0){
+                return 0;
+            }
+            else{
+                return 180;
+            }
+        }
+
+        else{
+            if(body.getLinearVelocity().y>0){
+                return 90;
+            }
+            else{
+                return 270;
+            }
+        }
+
+//        //http://stackoverflow.com/questions/22421054/determine-movement-vectors-direction-from-velocity
+//
+//        float addDeg = 0;
+//        if(body.getLinearVelocity().x<0) {
+//            addDeg = body.getLinearVelocity().y > 0 ? 180 : 270;
+//        }
+//        else if(body.getLinearVelocity().y<=0){
+//            addDeg = 360;
+//        }
+//
+//        return ((float)Math.abs(
+//                Math.abs(
+//                        Math.atan(
+//                                body.getLinearVelocity().y/body.getLinearVelocity().x)*180/Math.PI)-addDeg));
     }
 
 

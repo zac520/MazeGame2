@@ -25,8 +25,8 @@ public class MainGame extends Game {
 
     public boolean saveEncrypted = true;
 
-    public int SCREEN_WIDTH = 480;
-    public int SCREEN_HEIGHT = 360;
+    public int SCREEN_WIDTH = 360;
+    public int SCREEN_HEIGHT = 480;
 
     public int EASY_MAZE_TYPE = 0;
     public int MEDIUM_MAZE_TYPE = 1;
@@ -54,6 +54,9 @@ public class MainGame extends Game {
         SCREEN_WIDTH = Gdx.graphics.getWidth();
         SCREEN_HEIGHT = Gdx.graphics.getHeight();
 
+        //start up the atlas
+        atlas = new TextureAtlas(Gdx.files.internal("assets/graphics/Maze.txt"));
+
         //start up all of the shared variables (needed for async loading)
         box2DRenderer = new Box2DDebugRenderer();
         stage = new Stage();
@@ -61,12 +64,14 @@ public class MainGame extends Game {
         font = new BitmapFont();
         myInputProcessor = new MyInputProcessor();
         loadingProgress = new String();
+        //set up our own skin to make on the fly
+        skin = new Skin();
+        skin.addRegions(atlas);
 
         //seed the randomizer
         rand = new Random();//seed this for any variable thing to use later
 
-        //start up the atlas
-        atlas = new TextureAtlas(Gdx.files.internal("assets/graphics/Maze.txt"));
+
 
         //need to learn about filters. For now, this allows me to add two actors side by side without a feathering effect between them
         //(makes it seamless)
@@ -74,7 +79,8 @@ public class MainGame extends Game {
         myTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
 
-        setScreen(new MenuScreen(this));
+        //setScreen(new MenuScreen(this));
+        setScreen(new VictoryScreen(this, 100, 100, true));
     }
 
 
