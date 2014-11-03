@@ -98,8 +98,8 @@ public class MenuScreen implements Screen {
         batch = new SpriteBatch();
 
         //set the height of each line for any text we display
-        textRowHeight = Gdx.graphics.getHeight() / 40;
-        buttonSize = Gdx.graphics.getHeight() / 4;
+        textRowHeight = game.SCREEN_HEIGHT / 40;
+        buttonSize = game.SCREEN_HEIGHT / 4;
 
         //set the ratio of width to height
         heightToWidthRatio = (float) game.SCREEN_HEIGHT / (float) game.SCREEN_WIDTH;
@@ -112,7 +112,7 @@ public class MenuScreen implements Screen {
         //convert to blocks in width
         availableSquareSizes = new Array<Integer>();
         for(int x = 0; x< commonMultiples.size; x++){
-            availableSquareSizes.add(Gdx.graphics.getWidth()/commonMultiples.get(x));
+            availableSquareSizes.add(game.SCREEN_HEIGHT/commonMultiples.get(x));
         }
 
         if(availableSquareSizes.size<4){
@@ -125,7 +125,8 @@ public class MenuScreen implements Screen {
 
         //initialize camera
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, game.SCREEN_WIDTH, game.SCREEN_HEIGHT);
+        //must use the actual height in this case. This way the camera will go beyond the play area, so ads will not overlap
+        camera.setToOrtho(false, game.SCREEN_WIDTH, Gdx.graphics.getHeight());
 
         //initialize stage
         stage = new Stage();

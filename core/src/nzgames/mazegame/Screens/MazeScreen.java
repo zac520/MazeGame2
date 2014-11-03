@@ -142,7 +142,7 @@ public class MazeScreen implements Screen {
 
         //set the camera up
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, game.SCREEN_WIDTH, game.SCREEN_HEIGHT);
+        camera.setToOrtho(false, game.SCREEN_WIDTH, Gdx.graphics.getHeight());
 
         //set the limits of the camera
         setStageLimits();

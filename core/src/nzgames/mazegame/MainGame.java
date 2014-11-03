@@ -24,9 +24,12 @@ import java.util.Random;
 public class MainGame extends Game {
 
     public boolean saveEncrypted = true;
+    public boolean showAds = true;
+
 
     public int SCREEN_WIDTH = 360;
     public int SCREEN_HEIGHT = 480;
+    private int BANNER_PIXEL_HEIGHT=50;
 
     public int EASY_MAZE_TYPE = 1;
     public int MEDIUM_MAZE_TYPE = 2;
@@ -47,12 +50,16 @@ public class MainGame extends Game {
     public String loadingProgress;
     public int loadingProgressPercent = -1;
     public int textRowHeight;
+    public int BANNER_DIP_HEIGHT;
     @Override
     public void create () {
 
+        //set up the ad space
+        setScreenDimensionsForAds();
+
         //set the screen dimensions
         SCREEN_WIDTH = Gdx.graphics.getWidth();
-        SCREEN_HEIGHT = Gdx.graphics.getHeight();
+        SCREEN_HEIGHT = Gdx.graphics.getHeight()-BANNER_DIP_HEIGHT;
 
         //start up the atlas
         atlas = new TextureAtlas(Gdx.files.internal("assets/graphics/Maze.txt"));
@@ -98,6 +105,29 @@ public class MainGame extends Game {
         float ratio = pixelsPerTextLine/currentFontSize;
 
         return ratio;
+
+    }
+
+    private void setScreenDimensionsForAds(){
+        //Determine the platform that the application is running on.
+        switch (Gdx.app.getType()){
+            case Desktop:
+                //System.out.println("I'm running on a Desktop.");
+                break;
+
+            case Android:
+                if(showAds){
+                    BANNER_PIXEL_HEIGHT = 50;
+                }
+                else{
+                    BANNER_PIXEL_HEIGHT = 0;
+                }
+                float SCREEN_DENSITY = Gdx.graphics.getDensity();
+                BANNER_DIP_HEIGHT = (int) (SCREEN_DENSITY * BANNER_PIXEL_HEIGHT);
+                SCREEN_HEIGHT = Gdx.graphics.getHeight() - BANNER_DIP_HEIGHT; //Draw the Board without the banner
+                break;
+
+        }
 
     }
 
