@@ -4,14 +4,14 @@ filter: Linear,Linear
 repeat: none
 Blueberrymuffin
   rotate: false
-  xy: 600, 2
+  xy: 260, 260
   size: 265, 222
   orig: 265, 222
   offset: 0, 0
   index: -1
 Cheese
   rotate: false
-  xy: 177, 2
+  xy: 574, 2
   size: 155, 186
   orig: 164, 190
   offset: 5, 0
@@ -25,49 +25,49 @@ CookedbaconX
   index: -1
 Lock
   rotate: false
-  xy: 1269, 246
+  xy: 2, 260
   size: 256, 354
   orig: 256, 354
   offset: 0, 0
   index: -1
 MenuBackground
   rotate: false
-  xy: 1095, 602
+  xy: 1095, 616
   size: 720, 1280
   orig: 720, 1280
   offset: 0, 0
   index: -1
 Mouse
   rotate: false
-  xy: 334, 2
+  xy: 439, 2
   size: 133, 209
   orig: 208, 229
   offset: 50, 15
   index: 1
 Mouse
   rotate: false
-  xy: 867, 2
+  xy: 177, 2
   size: 129, 224
   orig: 208, 229
   offset: 50, 0
   index: 2
 Mouse
   rotate: false
-  xy: 469, 2
+  xy: 308, 2
   size: 129, 221
   orig: 208, 229
   offset: 50, 3
   index: 3
 Tracks
   rotate: false
-  xy: 2, 602
+  xy: 2, 616
   size: 486, 488
   orig: 549, 519
   offset: 53, 21
   index: -1
 UprightMouse
   rotate: false
-  xy: 490, 602
+  xy: 490, 616
   size: 603, 780
   orig: 651, 798
   offset: 28, 10
@@ -81,57 +81,57 @@ Wall
   index: -1
 WhiteButtonDownEasy
   rotate: false
-  xy: 2, 246
-  size: 253, 242
-  orig: 256, 256
-  offset: 0, 1
+  xy: 731, 2
+  size: 256, 256
+  orig: 286, 286
+  offset: 14, 16
   index: -1
 WhiteButtonDownHard
   rotate: false
-  xy: 1253, 2
-  size: 253, 242
-  orig: 256, 256
-  offset: 0, 1
+  xy: 989, 2
+  size: 256, 256
+  orig: 286, 286
+  offset: 14, 16
   index: -1
 WhiteButtonDownMedium
   rotate: false
-  xy: 1508, 2
-  size: 253, 242
-  orig: 256, 256
-  offset: 0, 1
+  xy: 1247, 2
+  size: 256, 256
+  orig: 286, 286
+  offset: 14, 16
   index: -1
 WhiteButtonDownRidiculous
   rotate: false
-  xy: 998, 2
-  size: 253, 242
-  orig: 256, 256
-  offset: 0, 1
+  xy: 1505, 2
+  size: 256, 256
+  orig: 286, 286
+  offset: 14, 16
   index: -1
 WhiteButtonUpEasy
   rotate: false
-  xy: 510, 246
-  size: 251, 250
-  orig: 256, 256
-  offset: 0, 1
+  xy: 1095, 260
+  size: 282, 282
+  orig: 286, 286
+  offset: 2, 2
   index: -1
 WhiteButtonUpHard
   rotate: false
-  xy: 763, 246
-  size: 251, 250
-  orig: 256, 256
-  offset: 0, 1
+  xy: 811, 260
+  size: 282, 282
+  orig: 286, 286
+  offset: 2, 2
   index: -1
 WhiteButtonUpMedium
   rotate: false
-  xy: 257, 246
-  size: 251, 250
-  orig: 256, 256
-  offset: 0, 1
+  xy: 527, 260
+  size: 282, 282
+  orig: 286, 286
+  offset: 2, 2
   index: -1
 WhiteButtonUpRidiculous
   rotate: false
-  xy: 1016, 246
-  size: 251, 250
-  orig: 256, 256
-  offset: 0, 1
+  xy: 1379, 260
+  size: 282, 282
+  orig: 286, 286
+  offset: 2, 2
   index: -1
