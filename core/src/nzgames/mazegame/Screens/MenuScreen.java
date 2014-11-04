@@ -420,7 +420,15 @@ public class MenuScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        //check to see if the maingame is just now receiving message that ads are ready to view
+        if(game.needCameraResize){
+            //calculate the percentage of the screen that needs to be freed
 
+            //now set the camera to be that percentage larger
+            camera.viewportHeight =Gdx.graphics.getHeight() + game.BANNER_DIP_HEIGHT;//make the camera go beyond border by how much we just added
+            camera.position.y = camera.viewportHeight/2;
+            game.needCameraResize = false;
+        }
 
         stage.act();
         stage.draw();
@@ -571,16 +579,16 @@ public class MenuScreen implements Screen {
         }
 
         //load the best scores
-        if (saveManager.loadDataValue("bestEasyTime", Float.class) != null) {
+        if (saveManager.loadDataValue("bestEasyScore", Float.class) != null) {
             bestEasyScore = saveManager.loadDataValue("bestEasyScore", Float.class);
         }
-        if (saveManager.loadDataValue("bestMediumTime", Float.class) != null) {
+        if (saveManager.loadDataValue("bestMediumScore", Float.class) != null) {
             bestMediumScore = saveManager.loadDataValue("bestMediumScore", Float.class);
         }
-        if (saveManager.loadDataValue("bestHardTime", Float.class) != null) {
+        if (saveManager.loadDataValue("bestHardScore", Float.class) != null) {
             bestHardScore = saveManager.loadDataValue("bestHardScore", Float.class);
         }
-        if (saveManager.loadDataValue("bestRidiculousTime", Float.class) != null) {
+        if (saveManager.loadDataValue("bestRidiculousScore", Float.class) != null) {
             bestRidiculousScore = saveManager.loadDataValue("bestRidiculousScore", Float.class);
         }
     }

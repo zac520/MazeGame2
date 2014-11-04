@@ -71,7 +71,7 @@ public class VictoryScreen implements Screen {
 
         // create viewport
         camera=new OrthographicCamera();
-        camera.setToOrtho(false, game.SCREEN_WIDTH, game.SCREEN_HEIGHT);
+        camera.setToOrtho(false, game.SCREEN_WIDTH, Gdx.graphics.getHeight());
         stage=new Stage();
         stage.getViewport().setCamera(camera);
 
@@ -137,6 +137,17 @@ public class VictoryScreen implements Screen {
         // let the stage act and draw
         stage.act(delta);
         stage.draw();
+
+
+        //check to see if the maingame is just now receiving message that ads are ready to view
+        if(game.needCameraResize){
+            //calculate the percentage of the screen that needs to be freed
+
+            //now set the camera to be that percentage larger
+            camera.viewportHeight =Gdx.graphics.getHeight() + game.BANNER_DIP_HEIGHT;//make the camera go beyond border by how much we just added
+            camera.position.y = camera.viewportHeight/2;
+            game.needCameraResize = false;
+        }
 
         // draw our text
         batch.begin();

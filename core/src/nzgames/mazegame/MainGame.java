@@ -24,8 +24,8 @@ import java.util.Random;
 public class MainGame extends Game {
 
     public boolean saveEncrypted = true;
-    public boolean showAds = true;
-
+    public boolean showAds = false;//default to false, and we will set from the android screen for now
+    public boolean needCameraResize = false;
 
     public int SCREEN_WIDTH = 360;
     public int SCREEN_HEIGHT = 480;
@@ -108,7 +108,7 @@ public class MainGame extends Game {
 
     }
 
-    private void setScreenDimensionsForAds(){
+    public void setScreenDimensionsForAds(){
         //Determine the platform that the application is running on.
         switch (Gdx.app.getType()){
             case Desktop:
