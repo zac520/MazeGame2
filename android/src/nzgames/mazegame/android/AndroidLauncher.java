@@ -21,10 +21,10 @@ public class AndroidLauncher extends AndroidApplication {
     private AdView adView;
 
 
-    private boolean showAds = false;
+    private boolean showAds = true;
     /* Your ad unit id. Replace with your actual ad unit id. */
     private static final String AD_UNIT_ID = "ca-app-pub-3051992755771126/3110326895";
-
+    private static final String AD_UNIT_ID_2 = "5984C45AB928FA9A4EB69AF676FA3040";
 
     @Override
     protected void onCreate (Bundle savedInstanceState) {
@@ -99,7 +99,8 @@ public class AndroidLauncher extends AndroidApplication {
             // get test ads on a physical device. e.g.
             // "Use AdRequest.Builder.addTestDevice("ABCDEF012345") to get test ads on this device."
             AdRequest adRequest = new AdRequest.Builder()
-                    .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                    /*.addTestDevice(AdRequest.DEVICE_ID_EMULATOR)*/
+                    .addTestDevice(AD_UNIT_ID_2)
                     .build();
 
 
