@@ -57,9 +57,7 @@ public class MainGame extends Game {
         //set up the ad space
         setScreenDimensionsForAds();
 
-        //set the screen dimensions
-        SCREEN_WIDTH = Gdx.graphics.getWidth();
-        SCREEN_HEIGHT = Gdx.graphics.getHeight()-BANNER_DIP_HEIGHT;
+
 
         //start up the atlas
         atlas = new TextureAtlas(Gdx.files.internal("assets/graphics/Maze.txt"));
@@ -83,6 +81,10 @@ public class MainGame extends Game {
     }
     //set up shared variables
     public void resetSharedVariables(){
+        //set the screen dimensions
+        SCREEN_WIDTH = Gdx.graphics.getWidth();
+        SCREEN_HEIGHT = Gdx.graphics.getHeight()-BANNER_DIP_HEIGHT;
+
         box2DRenderer = new Box2DDebugRenderer();
         stage = new Stage();
         batch = new SpriteBatch();

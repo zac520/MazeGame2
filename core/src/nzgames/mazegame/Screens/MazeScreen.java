@@ -84,6 +84,8 @@ public class MazeScreen implements Screen {
     private float currentZoomLevelY = 1;
 
     public boolean flinging = false;
+    public boolean zooming = false;
+    public boolean panning = false;
     public float velX;
     public float velY;
 
@@ -143,6 +145,9 @@ public class MazeScreen implements Screen {
         //set the camera up
         camera = new OrthographicCamera();
         camera.setToOrtho(false, game.SCREEN_WIDTH, Gdx.graphics.getHeight());
+
+        //camera.setToOrtho(false, game.SCREEN_WIDTH, game.SCREEN_HEIGHT+game.BANNER_DIP_HEIGHT);
+        //camera.position.y = camera.viewportHeight/2;
 
         //set the limits of the camera
         setStageLimits();
@@ -496,8 +501,33 @@ public class MazeScreen implements Screen {
             camera.position.y = camera.viewportHeight/2;
             game.needCameraResize = false;
         }
+        //System.out.println("Camera zoom = " + camera.zoom);
 
+        //set camera to follow player
+        if(camera.zoom >0.9){//this prevents the zoom from looking weird
+            setCameraZoom(1);
+            camera.position.set(
+                    game.SCREEN_WIDTH/2,
+                    game.SCREEN_HEIGHT/2 + game.BANNER_DIP_HEIGHT/2,
+                    0
+            );
+        }
 
+        if(camera.zoom<1) {//if we are zoomed in, and not flinging, and not touching the screen, then follow player
+            if(!flinging) {
+                if(!Gdx.input.isTouched()) {
+                    camera.position.set(
+                            player.getBody().getPosition().x * Box2DVars.PPM,
+                            player.getBody().getPosition().y * Box2DVars.PPM,
+                            0
+                    );
+                    camera.update();
+
+                    pushCameraBackIntoLimits();
+                }
+
+            }
+        }
 
 
         //slow down the camera if we are flinging
@@ -1153,7 +1183,7 @@ public class MazeScreen implements Screen {
         x_left_limit = (camera.viewportWidth *camera.zoom)/2;
         x_right_limit = game.SCREEN_WIDTH - (camera.viewportWidth*camera.zoom) / 2;
         y_bottom_limit = (camera.viewportHeight*camera.zoom) / 2;
-        y_top_limit = (game.SCREEN_HEIGHT - (camera.viewportHeight*camera.zoom) /2);
+        y_top_limit = (game.SCREEN_HEIGHT + (game.BANNER_DIP_HEIGHT*camera.zoom) - (camera.viewportHeight*camera.zoom) /2);
     }
     @Override
     public void resize(int width, int height) {
@@ -1240,16 +1270,17 @@ public class MazeScreen implements Screen {
         @Override
         public boolean fling(float velocityX, float velocityY, int button) {
             //System.out.println("flinging");
-            flinging = true;
-            velX = currentZoomLevelX * velocityX;
-            velY = currentZoomLevelY * velocityY;
+            if(camera.zoom <1) {//we can only zoom if we are zoomed in
+                flinging = true;
+                velX = currentZoomLevelX * velocityX;
+                velY = currentZoomLevelY * velocityY;
+            }
             return false;
         }
 
         @Override
         public boolean pan(float x, float y, float deltaX, float deltaY) {
-            System.out.println("panning");
-
+            //System.out.println("panning");
             //get the new position
             newPosition = new Vector3(
                     camera.position.x - (deltaX * currentZoomLevelX),
@@ -1257,8 +1288,10 @@ public class MazeScreen implements Screen {
                     0
 
             );
-            camera.position.set(newPosition);
-            pushCameraBackIntoLimits();
+            if(isInStageLimits(newPosition)) {
+                camera.position.set(newPosition);
+            }
+            //pushCameraBackIntoLimits();
 
 
 
@@ -1268,8 +1301,9 @@ public class MazeScreen implements Screen {
 
         @Override
         public boolean panStop(float x, float y, int pointer, int button) {
-            System.out.println("stopping panning");
-            movingBlockBeyondBorders = false;
+            //panning = false;
+            //System.out.println("stopping panning");
+            //movingBlockBeyondBorders = false;
             return false;
         }
 
@@ -1282,17 +1316,8 @@ public class MazeScreen implements Screen {
             }
 
             float ratio = originalDistance / currentDistance;
-            if((currentCameraZoom * ratio <1)&&(currentCameraZoom*ratio>0.2)) {
-                camera.zoom = currentCameraZoom * ratio;
-                currentZoomLevelX = originalZoomLevelX * camera.zoom;
-                currentZoomLevelY = originalZoomLevelY * camera.zoom;
-
-                //reset the window limits based on the new zoom
-                setStageLimits();
-
-                //if we have zoomed beyond the stage limits, move back in
-                pushCameraBackIntoLimits();
-
+            if((currentCameraZoom * ratio <=1)&&(currentCameraZoom*ratio>0.2)) {
+                setCameraZoom(currentCameraZoom * ratio);
             }
 
             return false;
@@ -1304,8 +1329,19 @@ public class MazeScreen implements Screen {
 
             return false;
         }
-    }
 
+    }
+    private void setCameraZoom(float zoom){
+        camera.zoom = zoom;
+        currentZoomLevelX = originalZoomLevelX * camera.zoom;
+        currentZoomLevelY = originalZoomLevelY * camera.zoom;
+
+        //reset the window limits based on the new zoom
+        setStageLimits();
+
+        //if we have zoomed beyond the stage limits, move back in
+        pushCameraBackIntoLimits();
+    }
     private void goBackToMenu(){
 
         //easy maze is * 1, medium is  * 2, hard is * 4, and ridiculous is * 8
@@ -1499,6 +1535,7 @@ public class MazeScreen implements Screen {
         }
 
     }
+
 
     private void pushCameraBackIntoLimits(){
         if(camera.position.x < x_left_limit){

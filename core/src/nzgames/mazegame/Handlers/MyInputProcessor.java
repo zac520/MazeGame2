@@ -1,7 +1,9 @@
 package nzgames.mazegame.Handlers;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import nzgames.mazegame.Screens.MazeScreen;
 
 /**
  * Created by zac520 on 7/17/14.
@@ -66,8 +68,9 @@ public class MyInputProcessor extends Stage {
     public boolean touchUp(int x, int y, int pointer, int button) {
 //        MyInput.setKey(MyInput.JUMP, false);
 //        MyInput.setKey(MyInput.MAGIC, false);
-
-
+//        if(!Gdx.input.isTouched()){
+//            System.out.println("Done Zooming");
+//        }
         return true;
     }
 

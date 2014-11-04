@@ -250,7 +250,9 @@ public class MenuScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
 
                 blocksWide = getNearestSquareFitWidth(gameWidth);
-                blocksHigh = getNearestSquareFitHeight(blocksWide);
+                final int pixelsPerWidth = game.SCREEN_WIDTH/blocksWide;
+                blocksHigh = game.SCREEN_HEIGHT/pixelsPerWidth;
+                //blocksHigh = getNearestSquareFitHeight(gameWidth);
 
                 //need to set the screen on a new thread, so the game doesn't freeze while we load it. This is how
                 autoModeTimer = new Timer();
@@ -258,6 +260,7 @@ public class MenuScreen implements Screen {
                     @Override
                     public void run() {
                         //Your code goes Here
+                        game.SCREEN_HEIGHT = (blocksHigh * pixelsPerWidth );
                         game.setScreen(new MazeScreen(game,gamePlayType,blocksWide,blocksHigh));
 
                     }
@@ -454,7 +457,7 @@ public class MenuScreen implements Screen {
 
         //draw the loading progress, if applicable, and the loading percent, if applicable
         if(!game.loadingProgress.isEmpty()){
-            font.draw(batch, game.loadingProgress +"  "+  (game.loadingProgressPercent>-1?(String.valueOf(game.loadingProgressPercent) + "%"):""), 10, textRowHeight);
+            font.draw(batch, game.loadingProgress +"  "+  (game.loadingProgressPercent>-1?(String.valueOf(game.loadingProgressPercent) + "%"):""), 10, textRowHeight*25);
 
         }
 

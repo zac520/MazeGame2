@@ -21,7 +21,7 @@ public class AndroidLauncher extends AndroidApplication {
     private AdView adView;
 
 
-    private boolean showAds = true;
+    private boolean showAds = false;
     /* Your ad unit id. Replace with your actual ad unit id. */
     private static final String AD_UNIT_ID = "ca-app-pub-3051992755771126/3110326895";
 
@@ -50,7 +50,7 @@ public class AndroidLauncher extends AndroidApplication {
         //initialize the MainGame view
         final MainGame mainGame = new MainGame();
         if(showAds) {
-            //mainGame.showAds = true;
+            mainGame.showAds = true;
         }
         View gameView = initializeForView(mainGame, config);
 
@@ -84,10 +84,10 @@ public class AndroidLauncher extends AndroidApplication {
                     super.onAdLoaded();
                     //wait until the ads are loaded before setting libgdx to allow space
                     if(firstAd) {
-                        adView.setBackgroundColor(Color.BLACK);//the ad takes forever to view sometimes, at least make the spot visible.
-                        mainGame.showAds = true;
-                        mainGame.setScreenDimensionsForAds();
-                        mainGame.needCameraResize = true;
+//                        adView.setBackgroundColor(Color.BLACK);//the ad takes forever to view sometimes, at least make the spot visible.
+//                        mainGame.showAds = true;
+//                        mainGame.setScreenDimensionsForAds();
+//                        mainGame.needCameraResize = true;
                     }
                     firstAd = false; //so that we only change the camera one time
 
@@ -101,6 +101,9 @@ public class AndroidLauncher extends AndroidApplication {
             AdRequest adRequest = new AdRequest.Builder()
                     .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
                     .build();
+
+
+            adView.setBackgroundColor(Color.BLACK);//the ad takes forever to view sometimes, at least make the spot visible.
 
             // Start loading the ad in the background.
             adView.loadAd(adRequest);
