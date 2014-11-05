@@ -1,0 +1,25 @@
+LoadingGraphics.png
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+BlackContainer
+  rotate: false
+  xy: 2, 2
+  size: 1024, 128
+  orig: 1024, 128
+  offset: 0, 0
+  index: -1
+background
+  rotate: false
+  xy: 1028, 2
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+blueBar
+  rotate: false
+  xy: 2, 132
+  size: 1024, 128
+  orig: 1024, 128
+  offset: 0, 0
+  index: -1

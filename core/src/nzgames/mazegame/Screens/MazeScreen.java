@@ -38,9 +38,7 @@ import java.util.concurrent.TimeUnit;
  * Created by zac520 on 10/22/14.
  */
 public class MazeScreen implements Screen {
-    //TODO add timer as a HUD
-    // add saving best scores for each category
-    // add a path behind you for each block traveled
+
     OrthographicCamera camera;
     MainGame game;
     private World world;
@@ -117,9 +115,13 @@ public class MazeScreen implements Screen {
     private final float maxAccum = 1f / 20f;
 
 
+    /** variables to track long steps for loading bar**/
     //used for loading progress percent
     private int totalSquaresToVisit = 0;
     private int totalVisitedSquares = 0;
+    private float addMazeWallsPercentCompletion =0;//there are two long steps, so we will add these together for total progress
+    private float createMazePercentCompletion = 0;
+    private int totalLongSteps = 2;
 
     private int xBlockValue;
     private int yBlockValue;
@@ -243,6 +245,9 @@ public class MazeScreen implements Screen {
     }
     private void createMazeWithoutRecursion(){
         //had to do it without recursion because stack is way too large to make a maze
+
+        //reset the visited squares for calculation
+        totalVisitedSquares =0;
 
 
         //calculate the total number of squares to visit
@@ -409,18 +414,28 @@ public class MazeScreen implements Screen {
 
             }
 
-            game.loadingProgressPercent = (int) (((float)totalVisitedSquares / (float)totalSquaresToVisit)*100);
-
+            //game.loadingProgressPercent =  (((float)totalVisitedSquares / (float)totalSquaresToVisit));
+            createMazePercentCompletion = (float)totalVisitedSquares / (float)totalSquaresToVisit;
+            updateLoadingProgress();
         }
 
         //create the end at the longest recorded location
         createEnd((int)longestDistanceLocation.x, (int) longestDistanceLocation.y);
 
-        //reset the loading progress to -1 so we don't print it anywhere.
-        game.loadingProgressPercent = -1;
+        //reset the loading progress to 0 so we don't print it anywhere.
+        //game.loadingProgressPercent = 0;
 
     }
 
+    /**
+     * This class will add up all of the percents of each step, then divide by the number of steps
+     * to return a total percent progress
+     *
+     */
+    public void updateLoadingProgress(){
+
+         game.loadingProgressPercent = (addMazeWallsPercentCompletion + createMazePercentCompletion)/totalLongSteps;
+    }
     private void createEnd(int xPosition, int yPosition){
 
         xPosition *= lineWidth;
@@ -650,7 +665,7 @@ public class MazeScreen implements Screen {
         batch.begin();
         font.draw(batch,convertPlaytimeToReadable(playTime),
                 10,
-                game.SCREEN_HEIGHT -30);
+                game.textRowHeight);
         batch.end();
 
 
@@ -855,60 +870,27 @@ public class MazeScreen implements Screen {
         verticalWallActor = new Actor[blocksWide][blocksHigh];
         horizontalWallActor = new Actor[blocksWide][blocksHigh];
 
+        //reset the visited squares for calculation
+        totalVisitedSquares =0;
+
+
+        //calculate the total number of squares to visit
+        totalSquaresToVisit = blocksHigh * blocksWide;
+
 
         //create all of the walls
         for(int x = 0; x< blocksWide; x++){
             for(int y = 0; y< blocksHigh; y++){
                 createLine(x, y, true);
                 createLine(x, y, false);
+                totalVisitedSquares +=1;
+                addMazeWallsPercentCompletion = (float)totalVisitedSquares / (float)totalSquaresToVisit;
+                updateLoadingProgress();
             }
         }
 
     }
-//    private void addAllMazeSquareSensors(){
-//        //create all of the walls
-//        for(int x = 0; x< blocksWide; x++){
-//            for(int y = 0; y< blocksHigh; y++){
-//                addSquareSensor(x, y);
-//                addSquareSensor(x, y);
-//            }
-//        }
-//    }
-//    private void addSquareSensor(int xPosition, int yPosition){
-//
-//        xPosition *= lineWidth;
-//        yPosition *= lineHeight;
-//
-//        //define body
-//        BodyDef bdef = new BodyDef();
-//
-//        bdef.position.set(
-//                (xPosition + lineWidth/2) / Box2DVars.PPM,
-//                (yPosition + lineHeight/2) / Box2DVars.PPM);
-//        bdef.type = BodyDef.BodyType.DynamicBody;
-//
-//        //create body
-//        Body body = world.createBody(bdef);
-//
-//
-//        //define Fixture
-//        PolygonShape shape = new PolygonShape();
-//        //shape.setRadius(lineWidth<lineHeight ?(lineWidth/2f)/Box2DVars.PPM:(lineHeight/2f)/Box2DVars.PPM);
-//        shape.setAsBox(
-//                0.9f*(lineWidth/2)/(Box2DVars.PPM),
-//                0.9f*(lineHeight/2)/(Box2DVars.PPM));
-//
-//
-//        FixtureDef fdef = new FixtureDef();
-//        fdef.isSensor = true;
-//        fdef.shape = shape;
-//        //it is a sensor, and can only hit the player
-//        fdef.filter.categoryBits = Box2DVars.BIT_SENSOR;
-//        fdef.filter.maskBits = Box2DVars.BIT_PLAYER;
-//        body.setSleepingAllowed(false);
-//        body.createFixture(fdef).setUserData("floorSensor");//a tag to identify this later
-//
-//    }
+
 
     private void drawBorder(){
         //we cannot be contained within a box with box 2d. We need 4 separate lines

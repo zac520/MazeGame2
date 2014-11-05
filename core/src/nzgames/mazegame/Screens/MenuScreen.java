@@ -22,6 +22,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.async.AsyncExecutor;
 import com.badlogic.gdx.utils.async.AsyncTask;
+import nzgames.mazegame.Actors.LoadingBar;
 import nzgames.mazegame.Handlers.SaveManager;
 import nzgames.mazegame.MainGame;
 
@@ -76,8 +77,8 @@ public class MenuScreen implements Screen {
 
     private long testTime;
     private static final int MIN_EASY_GAMES_FOR_MEDIUM = 5;
-    private static final int MIN_MEDIUM_GAMES_FOR_HARD = 7;
-    private static final int MIN_HARD_GAMES_FOR_RIDICULOUS = 10;
+    private static final int MIN_MEDIUM_GAMES_FOR_HARD = 7;//7
+    private static final int MIN_HARD_GAMES_FOR_RIDICULOUS = 10;//10
 
     private int mazeType;
     Texture boardGraphic;
@@ -98,7 +99,7 @@ public class MenuScreen implements Screen {
         batch = new SpriteBatch();
 
         //set the height of each line for any text we display
-        textRowHeight = game.SCREEN_HEIGHT / 40;
+        textRowHeight = game.textRowHeight;
         buttonSize = game.SCREEN_HEIGHT / 4;
 
         //set the ratio of width to height
@@ -140,7 +141,7 @@ public class MenuScreen implements Screen {
         //System.out.println(font.getScaleX());
 
         //setup the skin for the popup
-        popupSkin = new Skin(Gdx.files.internal("assets/userinterface/defaultskin.json"));
+        popupSkin = game.popupSkin;
 
         //set the background
         background = new TextureRegion(game.atlas.findRegion("MenuBackground"));
@@ -157,6 +158,8 @@ public class MenuScreen implements Screen {
 
         // give input to the stage
         Gdx.input.setInputProcessor(stage);
+
+
     }
 
     private void createButtons(){
@@ -254,17 +257,26 @@ public class MenuScreen implements Screen {
                 blocksHigh = game.SCREEN_HEIGHT/pixelsPerWidth;
                 //blocksHigh = getNearestSquareFitHeight(gameWidth);
 
+                //set up the loading screen
+                game.resetLoadingVariables();
+                LoadingBar loadingBar = new LoadingBar(game);
+                stage.addActor(loadingBar.getGroup());
+
                 //need to set the screen on a new thread, so the game doesn't freeze while we load it. This is how
                 autoModeTimer = new Timer();
                 autoModeTimer.schedule(new TimerTask() {
                     @Override
                     public void run() {
+
                         //Your code goes Here
                         game.SCREEN_HEIGHT = (blocksHigh * pixelsPerWidth );
+
                         game.setScreen(new MazeScreen(game,gamePlayType,blocksWide,blocksHigh));
+
 
                     }
                 }, 0);
+
 
             }
         });
@@ -433,7 +445,7 @@ public class MenuScreen implements Screen {
             game.needCameraResize = false;
         }
 
-        stage.act();
+        stage.act(delta);
         stage.draw();
 
 
@@ -456,10 +468,10 @@ public class MenuScreen implements Screen {
         font.draw(batch, "Best score: " + (bestRidiculousScore > 0 ? bestRidiculousScore : ""), game.SCREEN_WIDTH/1.5f, game.SCREEN_HEIGHT -(textRowHeight*10));
 
         //draw the loading progress, if applicable, and the loading percent, if applicable
-        if(!game.loadingProgress.isEmpty()){
-            font.draw(batch, game.loadingProgress +"  "+  (game.loadingProgressPercent>-1?(String.valueOf(game.loadingProgressPercent) + "%"):""), 10, textRowHeight*25);
-
-        }
+//        if(!game.loadingProgress.isEmpty()){
+//            font.draw(batch, game.loadingProgress +"  "+  (game.loadingProgressPercent>-1?(String.valueOf(game.loadingProgressPercent) + "%"):""), 10, textRowHeight*25);
+//
+//        }
 
 
         batch.end();

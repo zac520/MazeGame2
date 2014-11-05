@@ -40,6 +40,8 @@ public class MainGame extends Game {
     /** shared textures **/
     public TextureAtlas atlas;
     public Skin skin;
+    public TextureAtlas loadingAtlas;
+    public Skin popupSkin;
 
     /** shared variables **/
     public Stage stage;
@@ -48,9 +50,15 @@ public class MainGame extends Game {
     public Box2DDebugRenderer box2DRenderer;
     public MyInputProcessor myInputProcessor;
     public String loadingProgress;
-    public int loadingProgressPercent = -1;
+    public float loadingProgressPercent = 0;
     public int textRowHeight;
     public int BANNER_DIP_HEIGHT;
+
+    /**loading screen variables**/
+    public Stage loadingStage;
+    public SpriteBatch loadingBatch;
+
+
     @Override
     public void create () {
 
@@ -61,6 +69,7 @@ public class MainGame extends Game {
 
         //start up the atlas
         atlas = new TextureAtlas(Gdx.files.internal("assets/graphics/Maze.txt"));
+        loadingAtlas = new TextureAtlas(Gdx.files.internal("assets/graphics/LoadingGraphics.txt"));
 
         //start up all of the shared variables (needed for async loading)
         resetSharedVariables();
@@ -79,6 +88,13 @@ public class MainGame extends Game {
         setScreen(new MenuScreen(this));
         //setScreen(new VictoryScreen(this, 100, 100, true));
     }
+
+
+    public void resetLoadingVariables(){
+        loadingStage = new Stage();
+        loadingBatch = new SpriteBatch();
+    }
+
     //set up shared variables
     public void resetSharedVariables(){
         //set the screen dimensions
@@ -97,6 +113,10 @@ public class MainGame extends Game {
         //set up our own skin to make on the fly
         skin = new Skin();
         skin.addRegions(atlas);
+
+        //set up this skin for popups
+        popupSkin = new Skin(Gdx.files.internal("assets/userinterface/defaultskin.json"));
+
     }
     private float getTextScaling(int pixelsPerTextLine){
 

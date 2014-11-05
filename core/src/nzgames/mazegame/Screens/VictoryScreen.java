@@ -103,7 +103,6 @@ public class VictoryScreen implements Screen {
 
 
 
-        stage.addActor(mouse);
 
 
         // create the cheese
@@ -115,6 +114,7 @@ public class VictoryScreen implements Screen {
         for (int i = 0; i < (score/100); i++) {//always create the larger cheeses
             spawnCheese();
         }
+        stage.addActor(mouse);
 
     }
     private float getTextScaling(int pixelsPerTextLine){
